@@ -114,164 +114,15 @@ function createWormSegment(ctx, cx, cy, r, color) {
   return ctx.canvas;
 }
 
-// Stage 2: 뱀 세그먼트 (다이아몬드 비늘)
+// Stage 2: 뱀 세그먼트 (Slither.io급 현실적인 뱀 비늘)
 function createSnakeSegment(ctx, cx, cy, r, color) {
-  // 뱀 몸통은 더 길쭉
-  const width = r * 1.2;
-  const height = r * 0.85;
-
-  // Drop shadow
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowOffsetX = 1;
-  ctx.shadowOffsetY = 2;
-  ctx.shadowBlur = 4;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0)';
-  ctx.fill();
-  ctx.shadowColor = 'transparent';
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-  ctx.shadowBlur = 0;
-
-  // 기본 뱀 몸통
-  const grad = ctx.createRadialGradient(cx - width * 0.3, cy - height * 0.3, 0, cx, cy, width);
-  grad.addColorStop(0, lightenColor(color.h, 1.2));
-  grad.addColorStop(0.4, color.h);
-  grad.addColorStop(0.8, color.b);
-  grad.addColorStop(1, darkenColor(color.b, 0.6));
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // 다이아몬드 비늘 패턴
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.clip();
-
-  const scaleSize = Math.max(3, r * 0.3);
-  ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-  ctx.lineWidth = 0.5;
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-
-  for (let dx = -width; dx <= width; dx += scaleSize) {
-    for (let dy = -height; dy <= height; dy += scaleSize * 0.8) {
-      const x = cx + dx + (dy % (scaleSize * 1.6) === 0 ? scaleSize * 0.5 : 0);
-      const y = cy + dy;
-      
-      // 다이아몬드 형태
-      ctx.beginPath();
-      ctx.moveTo(x, y - scaleSize * 0.3);
-      ctx.lineTo(x + scaleSize * 0.3, y);
-      ctx.lineTo(x, y + scaleSize * 0.3);
-      ctx.lineTo(x - scaleSize * 0.3, y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    }
-  }
-
-  ctx.restore();
-
-  // 뱀 특유의 배 부분 하이라이트
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + height * 0.3, width * 0.7, height * 0.2, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.fill();
-
-  return ctx.canvas;
-}
-
-// Stage 3: 왕뱀 세그먼트 (황금 비늘)
-function createKingSnakeSegment(ctx, cx, cy, r, color) {
-  const width = r * 1.3;
+  const width = r * 1.15;
   const height = r * 0.9;
 
-  // Drop shadow (더 강함)
+  // 고품질 드롭 섀도우
   ctx.shadowColor = 'rgba(0,0,0,0.4)';
-  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetX = 1.5;
   ctx.shadowOffsetY = 3;
-  ctx.shadowBlur = 5;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0)';
-  ctx.fill();
-  ctx.shadowColor = 'transparent';
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-  ctx.shadowBlur = 0;
-
-  // 황금빛 기본 몸통
-  const grad = ctx.createRadialGradient(cx - width * 0.3, cy - height * 0.3, 0, cx, cy, width);
-  grad.addColorStop(0, '#ffe066');
-  grad.addColorStop(0.3, color.h);
-  grad.addColorStop(0.7, color.b);
-  grad.addColorStop(1, darkenColor(color.b, 0.5));
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // 황금 비늘 패턴
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.clip();
-
-  const scaleSize = Math.max(4, r * 0.35);
-  ctx.strokeStyle = 'rgba(180,140,0,0.6)';
-  ctx.lineWidth = 1;
-  ctx.fillStyle = 'rgba(255,215,0,0.3)';
-
-  for (let dx = -width; dx <= width; dx += scaleSize * 0.8) {
-    for (let dy = -height; dy <= height; dy += scaleSize * 0.7) {
-      const x = cx + dx + (dy % (scaleSize * 1.4) === 0 ? scaleSize * 0.4 : 0);
-      const y = cy + dy;
-      
-      // 육각형 비늘
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const angle = (i * Math.PI) / 3;
-        const px = x + Math.cos(angle) * scaleSize * 0.3;
-        const py = y + Math.sin(angle) * scaleSize * 0.3;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      
-      // 중심 점
-      ctx.beginPath();
-      ctx.arc(x, y, 1, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,0,0.8)';
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,215,0,0.3)';
-    }
-  }
-
-  ctx.restore();
-
-  // 황금 하이라이트
-  ctx.beginPath();
-  ctx.ellipse(cx - width * 0.2, cy - height * 0.2, width * 0.4, height * 0.3, -0.3, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,150,0.4)';
-  ctx.fill();
-
-  return ctx.canvas;
-}
-
-// Stage 4: 용 세그먼트 (용 비늘)
-function createDragonSegment(ctx, cx, cy, r, color) {
-  const width = r * 1.4;
-  const height = r;
-
-  // 용의 강력한 그림자
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowOffsetX = 2;
-  ctx.shadowOffsetY = 4;
   ctx.shadowBlur = 6;
   ctx.beginPath();
   ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
@@ -282,72 +133,327 @@ function createDragonSegment(ctx, cx, cy, r, color) {
   ctx.shadowOffsetY = 0;
   ctx.shadowBlur = 0;
 
-  // 용의 기본 몸통 (불타는 느낌)
-  const grad = ctx.createRadialGradient(cx - width * 0.3, cy - height * 0.3, 0, cx, cy, width);
-  grad.addColorStop(0, lightenColor(color.h, 1.4));
-  grad.addColorStop(0.2, color.h);
-  grad.addColorStop(0.5, color.b);
-  grad.addColorStop(0.8, darkenColor(color.b, 0.7));
-  grad.addColorStop(1, '#1a0000');
+  // Slither.io 스타일 3단계 그라디언트 (매우 부드러운)
+  const mainGrad = ctx.createRadialGradient(cx - width * 0.25, cy - height * 0.35, 0, cx, cy, width * 1.1);
+  mainGrad.addColorStop(0, lightenColor(color.h, 1.4)); // 매우 밝은 하이라이트
+  mainGrad.addColorStop(0.15, lightenColor(color.h, 1.15));
+  mainGrad.addColorStop(0.4, color.h);
+  mainGrad.addColorStop(0.7, color.b);
+  mainGrad.addColorStop(0.85, darkenColor(color.b, 0.8));
+  mainGrad.addColorStop(1, darkenColor(color.b, 0.5));
+  
   ctx.beginPath();
   ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = mainGrad;
   ctx.fill();
 
-  // 용의 큰 오각형 비늘
+  // 현실적인 뱀 비늘 패턴 (overlapping scales)
   ctx.save();
   ctx.beginPath();
   ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
   ctx.clip();
 
-  const scaleSize = Math.max(5, r * 0.4);
-  ctx.strokeStyle = 'rgba(255,60,0,0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.fillStyle = 'rgba(255,100,0,0.15)';
+  const scaleSize = Math.max(4, r * 0.25);
+  const rows = Math.ceil((height * 2) / (scaleSize * 0.6));
+  const cols = Math.ceil((width * 2) / (scaleSize * 0.8));
 
-  for (let dx = -width; dx <= width; dx += scaleSize * 0.9) {
-    for (let dy = -height; dy <= height; dy += scaleSize * 0.8) {
-      const x = cx + dx + (dy % (scaleSize * 1.6) === 0 ? scaleSize * 0.45 : 0);
-      const y = cy + dy;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const offsetX = (row % 2) * scaleSize * 0.4; // 벽돌 패턴
+      const x = cx - width + col * scaleSize * 0.8 + offsetX;
+      const y = cy - height + row * scaleSize * 0.6;
       
-      // 오각형 용 비늘
+      // 각 비늘마다 미세한 그라디언트
+      const scaleGrad = ctx.createRadialGradient(x - scaleSize * 0.1, y - scaleSize * 0.1, 0, x, y, scaleSize * 0.4);
+      scaleGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
+      scaleGrad.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+      scaleGrad.addColorStop(1, 'rgba(0,0,0,0.1)');
+      
+      // 타원형 비늘 (더 현실적)
       ctx.beginPath();
-      for (let i = 0; i < 5; i++) {
-        const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
-        const px = x + Math.cos(angle) * scaleSize * 0.35;
-        const py = y + Math.sin(angle) * scaleSize * 0.35;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
+      ctx.ellipse(x, y, scaleSize * 0.35, scaleSize * 0.25, Math.PI * 0.1, 0, Math.PI * 2);
+      ctx.fillStyle = scaleGrad;
       ctx.fill();
+      
+      // 비늘 테두리 (매우 미세)
+      ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+      ctx.lineWidth = 0.3;
       ctx.stroke();
-      
-      // 불꽃 효과 중심점
-      ctx.beginPath();
-      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,150,0,0.8)';
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,100,0,0.15)';
     }
   }
 
   ctx.restore();
 
-  // 용의 불꽃 하이라이트
+  // 뱀 배 부분 (Slither.io 스타일 중앙 하이라이트)
+  const bellyGrad = ctx.createLinearGradient(cx, cy - height * 0.2, cx, cy + height * 0.6);
+  bellyGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  bellyGrad.addColorStop(0.3, 'rgba(255,255,255,0.12)');
+  bellyGrad.addColorStop(0.7, 'rgba(255,255,255,0.08)');
+  bellyGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  
   ctx.beginPath();
-  ctx.ellipse(cx - width * 0.15, cy - height * 0.25, width * 0.5, height * 0.3, -0.2, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,180,50,0.3)';
+  ctx.ellipse(cx, cy + height * 0.1, width * 0.6, height * 0.4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = bellyGrad;
   ctx.fill();
 
-  // 불꽃 오라
-  const emberGrad = ctx.createRadialGradient(cx, cy, height * 0.6, cx, cy, height);
-  emberGrad.addColorStop(0, 'rgba(255,100,0,0)');
-  emberGrad.addColorStop(0.7, 'rgba(255,80,0,0.1)');
-  emberGrad.addColorStop(1, 'rgba(255,60,0,0.25)');
+  // 상단 하이라이트 (Slither.io의 시그니처)
+  ctx.beginPath();
+  ctx.ellipse(cx - width * 0.15, cy - height * 0.25, width * 0.5, height * 0.15, -0.2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fill();
+
+  return ctx.canvas;
+}
+
+// Stage 3: 왕뱀 세그먼트 (고급스러운 황금 비늘)
+function createKingSnakeSegment(ctx, cx, cy, r, color) {
+  const width = r * 1.25;
+  const height = r * 0.95;
+
+  // 왕족의 강력한 그림자
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 4;
+  ctx.shadowBlur = 8;
   ctx.beginPath();
   ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
-  ctx.fillStyle = emberGrad;
+  ctx.fillStyle = 'rgba(0,0,0,0)';
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowBlur = 0;
+
+  // 황금 메탈릭 그라디언트 (7단계!)
+  const goldGrad = ctx.createRadialGradient(cx - width * 0.2, cy - height * 0.3, 0, cx, cy, width * 1.2);
+  goldGrad.addColorStop(0, '#fffacd'); // 거의 흰색 하이라이트
+  goldGrad.addColorStop(0.1, '#ffd700'); // 순금
+  goldGrad.addColorStop(0.25, '#ffed4e'); // 밝은 황금
+  goldGrad.addColorStop(0.4, color.h);
+  goldGrad.addColorStop(0.6, '#daa520'); // 골든로드
+  goldGrad.addColorStop(0.8, color.b);
+  goldGrad.addColorStop(1, '#8b6914'); // 어두운 황금
+
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
+  ctx.fillStyle = goldGrad;
+  ctx.fill();
+
+  // 프리미엄 육각형 비늘 (honeycomb 패턴)
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
+  ctx.clip();
+
+  const hexSize = Math.max(5, r * 0.28);
+  const hexHeight = hexSize * Math.sqrt(3) / 2;
+  const rows = Math.ceil((height * 2) / (hexHeight * 1.5));
+  const cols = Math.ceil((width * 2) / (hexSize * 1.5));
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const offsetX = (row % 2) * hexSize * 0.75; // 정확한 honeycomb 오프셋
+      const x = cx - width + col * hexSize * 1.5 + offsetX;
+      const y = cy - height + row * hexHeight * 1.5;
+      
+      // 각 육각형마다 황금 그라디언트
+      const hexGrad = ctx.createRadialGradient(x - hexSize * 0.2, y - hexSize * 0.2, 0, x, y, hexSize * 0.6);
+      hexGrad.addColorStop(0, 'rgba(255,255,200,0.4)');
+      hexGrad.addColorStop(0.3, 'rgba(255,215,0,0.25)');
+      hexGrad.addColorStop(0.7, 'rgba(218,165,32,0.15)');
+      hexGrad.addColorStop(1, 'rgba(139,105,20,0.2)');
+      
+      // 완벽한 육각형
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI) / 3;
+        const px = x + Math.cos(angle) * hexSize * 0.35;
+        const py = y + Math.sin(angle) * hexSize * 0.35;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = hexGrad;
+      ctx.fill();
+      
+      // 황금 테두리
+      ctx.strokeStyle = 'rgba(184,134,11,0.4)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      
+      // 중앙 황금 점 (보석 효과)
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,100,0.9)';
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+
+  // 왕족 배 부분 (더 고급스러운)
+  const royalBellyGrad = ctx.createLinearGradient(cx, cy - height * 0.3, cx, cy + height * 0.5);
+  royalBellyGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  royalBellyGrad.addColorStop(0.2, 'rgba(255,255,200,0.25)');
+  royalBellyGrad.addColorStop(0.5, 'rgba(255,215,0,0.15)');
+  royalBellyGrad.addColorStop(0.8, 'rgba(255,255,200,0.1)');
+  royalBellyGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + height * 0.05, width * 0.7, height * 0.5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = royalBellyGrad;
+  ctx.fill();
+
+  // 왕족 상단 메탈릭 하이라이트
+  ctx.beginPath();
+  ctx.ellipse(cx - width * 0.1, cy - height * 0.3, width * 0.6, height * 0.2, -0.15, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fill();
+
+  // 추가 골드 글로우
+  ctx.beginPath();
+  ctx.ellipse(cx - width * 0.2, cy - height * 0.15, width * 0.3, height * 0.1, -0.2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,215,0,0.2)';
+  ctx.fill();
+
+  return ctx.canvas;
+}
+
+// Stage 4: 용 세그먼트 (전설급 드래곤 스케일)
+function createDragonSegment(ctx, cx, cy, r, color) {
+  const width = r * 1.35;
+  const height = r * 1.05;
+
+  // 전설의 드래곤 그림자 (매우 강력)
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 5;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0)';
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.shadowBlur = 0;
+
+  // 드래곤 몸통 - 용암 같은 9단계 그라디언트
+  const dragonGrad = ctx.createRadialGradient(cx - width * 0.25, cy - height * 0.3, 0, cx, cy, width * 1.3);
+  dragonGrad.addColorStop(0, lightenColor(color.h, 1.8));   // 거의 백색 핫스팟
+  dragonGrad.addColorStop(0.08, lightenColor(color.h, 1.5)); // 밝은 오렌지
+  dragonGrad.addColorStop(0.2, lightenColor(color.h, 1.2));  
+  dragonGrad.addColorStop(0.35, color.h);                    // 기본색
+  dragonGrad.addColorStop(0.5, color.b);
+  dragonGrad.addColorStop(0.65, darkenColor(color.b, 0.8));
+  dragonGrad.addColorStop(0.8, darkenColor(color.b, 0.6));
+  dragonGrad.addColorStop(0.92, '#2d1810'); // 어두운 갈색
+  dragonGrad.addColorStop(1, '#0a0000');   // 거의 검정
+
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
+  ctx.fillStyle = dragonGrad;
+  ctx.fill();
+
+  // 고품질 용 비늘 (overlapping pentagonal scales)
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width, height, 0, 0, Math.PI * 2);
+  ctx.clip();
+
+  const scaleSize = Math.max(6, r * 0.3);
+  const rows = Math.ceil((height * 2) / (scaleSize * 0.7));
+  const cols = Math.ceil((width * 2) / (scaleSize * 0.9));
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const offsetX = (row % 2) * scaleSize * 0.45; // 드래곤 스케일 오프셋
+      const x = cx - width + col * scaleSize * 0.9 + offsetX;
+      const y = cy - height + row * scaleSize * 0.7;
+      
+      // 각 비늘마다 불타는 그라디언트
+      const scaleFireGrad = ctx.createRadialGradient(
+        x - scaleSize * 0.15, y - scaleSize * 0.2, 0, 
+        x, y, scaleSize * 0.5
+      );
+      scaleFireGrad.addColorStop(0, 'rgba(255,200,100,0.3)');
+      scaleFireGrad.addColorStop(0.3, 'rgba(255,120,0,0.2)');
+      scaleFireGrad.addColorStop(0.7, 'rgba(200,60,0,0.15)');
+      scaleFireGrad.addColorStop(1, 'rgba(100,20,0,0.25)');
+      
+      // 완벽한 오각형 드래곤 스케일
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2 + (row * 0.1); // 약간의 회전 변화
+        const radius = scaleSize * (0.35 + Math.sin(i * 1.2) * 0.05); // 미세한 크기 변화
+        const px = x + Math.cos(angle) * radius;
+        const py = y + Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = scaleFireGrad;
+      ctx.fill();
+      
+      // 불타는 테두리
+      ctx.strokeStyle = 'rgba(255,80,20,0.4)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      
+      // 용의 심장 - 각 스케일 중앙에 불꽃 코어
+      const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, 2.5);
+      coreGrad.addColorStop(0, 'rgba(255,255,200,0.9)');
+      coreGrad.addColorStop(0.5, 'rgba(255,150,0,0.7)');
+      coreGrad.addColorStop(1, 'rgba(200,50,0,0.3)');
+      
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = coreGrad;
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+
+  // 드래곤 배 부분 (용암 글로우)
+  const lavaGrad = ctx.createLinearGradient(cx, cy - height * 0.4, cx, cy + height * 0.6);
+  lavaGrad.addColorStop(0, 'rgba(255,100,0,0)');
+  lavaGrad.addColorStop(0.2, 'rgba(255,180,50,0.15)');
+  lavaGrad.addColorStop(0.4, 'rgba(255,120,0,0.25)');
+  lavaGrad.addColorStop(0.6, 'rgba(255,180,50,0.2)');
+  lavaGrad.addColorStop(0.8, 'rgba(255,100,0,0.1)');
+  lavaGrad.addColorStop(1, 'rgba(255,100,0,0)');
+  
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + height * 0.05, width * 0.8, height * 0.6, 0, 0, Math.PI * 2);
+  ctx.fillStyle = lavaGrad;
+  ctx.fill();
+
+  // 드래곤 상단 메탈릭 하이라이트 (불타는 금속)
+  const metalGrad = ctx.createRadialGradient(
+    cx - width * 0.2, cy - height * 0.35, 0,
+    cx, cy - height * 0.2, width * 0.6
+  );
+  metalGrad.addColorStop(0, 'rgba(255,255,255,0.4)');
+  metalGrad.addColorStop(0.3, 'rgba(255,200,100,0.25)');
+  metalGrad.addColorStop(0.7, 'rgba(255,150,50,0.15)');
+  metalGrad.addColorStop(1, 'rgba(255,100,0,0.05)');
+  
+  ctx.beginPath();
+  ctx.ellipse(cx - width * 0.1, cy - height * 0.3, width * 0.6, height * 0.25, -0.1, 0, Math.PI * 2);
+  ctx.fillStyle = metalGrad;
+  ctx.fill();
+
+  // 추가 불꽃 오라 (외곽)
+  const fireAuraGrad = ctx.createRadialGradient(cx, cy, height * 0.5, cx, cy, height * 1.2);
+  fireAuraGrad.addColorStop(0, 'rgba(255,100,0,0)');
+  fireAuraGrad.addColorStop(0.6, 'rgba(255,80,20,0.08)');
+  fireAuraGrad.addColorStop(0.8, 'rgba(255,60,0,0.15)');
+  fireAuraGrad.addColorStop(1, 'rgba(200,40,0,0.08)');
+  
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, width * 1.1, height * 1.1, 0, 0, Math.PI * 2);
+  ctx.fillStyle = fireAuraGrad;
   ctx.fill();
 
   return ctx.canvas;

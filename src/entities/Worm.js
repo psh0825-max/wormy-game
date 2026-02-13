@@ -469,38 +469,67 @@ export class Worm {
     this.drawMouthAndTongue(ctx, hx, hy, r, false);
   }
 
-  // Stage 2: 뱀 머리 - 삼각형 형태
+  // Stage 2: 뱀 머리 - Slither.io급 현실적인 뱀 머리
   drawSnakeHead(ctx, hx, hy, r, evo) {
     this.drawBodyConnector(ctx, hx, hy, r);
     this.drawAuraAndBossEffects(ctx, hx, hy, r, evo);
 
-    // 뱀의 삼각형 머리
+    // 현실적인 뱀 머리 형태
     ctx.save();
     ctx.translate(hx, hy);
     ctx.rotate(this.angle);
 
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 3;
-    ctx.shadowBlur = 5;
+    // 강화된 그림자
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowOffsetX = 2.5;
+    ctx.shadowOffsetY = 4;
+    ctx.shadowBlur = 8;
 
-    // 뱀 머리 형태 (삼각형 + 둥근 모서리)
-    const headLength = r * 1.4;
-    const headWidth = r * 1.2;
+    const headLength = r * 1.6;
+    const headWidth = r * 1.1;
+    const neckWidth = r * 0.85;
     
-    const grad = ctx.createRadialGradient(-headLength * 0.3, -headWidth * 0.2, 0, 0, 0, headLength);
-    grad.addColorStop(0, this.lightenColor(this.color.h, 1.3));
-    grad.addColorStop(0.4, this.color.h);
-    grad.addColorStop(0.8, this.color.b);
-    grad.addColorStop(1, this.darkenColor(this.color.b, 0.6));
+    // Slither.io 스타일 5단계 머리 그라디언트
+    const headGrad = ctx.createRadialGradient(-headLength * 0.2, -headWidth * 0.15, 0, 0, 0, headLength * 0.8);
+    headGrad.addColorStop(0, this.lightenColor(this.color.h, 1.5)); // 매우 밝은 하이라이트
+    headGrad.addColorStop(0.2, this.lightenColor(this.color.h, 1.2));
+    headGrad.addColorStop(0.45, this.color.h);
+    headGrad.addColorStop(0.75, this.color.b);
+    headGrad.addColorStop(1, this.darkenColor(this.color.b, 0.7));
 
+    // 현실적인 뱀 머리 형태 (더 부드러운 곡선)
     ctx.beginPath();
-    ctx.moveTo(headLength * 0.6, 0); // 코 끝
-    ctx.quadraticCurveTo(headLength * 0.2, -headWidth * 0.5, -headLength * 0.3, -headWidth * 0.4);
-    ctx.quadraticCurveTo(-headLength * 0.6, 0, -headLength * 0.3, headWidth * 0.4);
-    ctx.quadraticCurveTo(headLength * 0.2, headWidth * 0.5, headLength * 0.6, 0);
+    ctx.moveTo(headLength * 0.65, 0); // 코 끝 (약간 뾰족)
+    
+    // 상단 곡선 (더 자연스럽게)
+    ctx.bezierCurveTo(
+      headLength * 0.4, -headWidth * 0.25,  // 첫 번째 제어점
+      headLength * 0.1, -headWidth * 0.45,  // 두 번째 제어점
+      -headLength * 0.1, -headWidth * 0.4   // 끝점
+    );
+    
+    // 목 부분 (자연스러운 연결)
+    ctx.bezierCurveTo(
+      -headLength * 0.3, -neckWidth * 0.35,
+      -headLength * 0.5, -neckWidth * 0.15,
+      -headLength * 0.6, 0
+    );
+    
+    // 하단 곡선 (대칭)
+    ctx.bezierCurveTo(
+      -headLength * 0.5, neckWidth * 0.15,
+      -headLength * 0.3, neckWidth * 0.35,
+      -headLength * 0.1, headWidth * 0.4
+    );
+    
+    ctx.bezierCurveTo(
+      headLength * 0.1, headWidth * 0.45,
+      headLength * 0.4, headWidth * 0.25,
+      headLength * 0.65, 0
+    );
+    
     ctx.closePath();
-    ctx.fillStyle = grad;
+    ctx.fillStyle = headGrad;
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
@@ -508,34 +537,70 @@ export class Worm {
     ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 0;
 
-    // 뱀 비늘 패턴 (머리에도)
+    // 현실적인 뱀 머리 비늘 (더 정교한)
     ctx.save();
     ctx.clip();
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i < 3; i++) {
-      const x = -headLength * 0.2 + i * headLength * 0.2;
-      ctx.beginPath();
-      ctx.moveTo(x, -headWidth * 0.2);
-      ctx.lineTo(x + headLength * 0.1, 0);
-      ctx.lineTo(x, headWidth * 0.2);
-      ctx.stroke();
+    
+    const scaleRows = 4;
+    const scalesPerRow = 6;
+    
+    for (let row = 0; row < scaleRows; row++) {
+      for (let col = 0; col < scalesPerRow; col++) {
+        const progress = row / (scaleRows - 1);
+        const x = -headLength * 0.4 + progress * headLength * 0.8;
+        const maxWidth = headWidth * (0.3 + 0.4 * Math.sin(progress * Math.PI));
+        const y = -maxWidth + (col / (scalesPerRow - 1)) * maxWidth * 2;
+        
+        const scaleSize = r * (0.15 + progress * 0.1);
+        
+        // 각 비늘의 미세한 그라디언트
+        const scaleGrad = ctx.createRadialGradient(x - scaleSize * 0.2, y - scaleSize * 0.2, 0, x, y, scaleSize);
+        scaleGrad.addColorStop(0, 'rgba(255,255,255,0.2)');
+        scaleGrad.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+        scaleGrad.addColorStop(1, 'rgba(0,0,0,0.15)');
+        
+        // 타원형 비늘
+        ctx.beginPath();
+        ctx.ellipse(x, y, scaleSize * 0.8, scaleSize * 0.5, Math.PI * (0.1 + progress * 0.1), 0, Math.PI * 2);
+        ctx.fillStyle = scaleGrad;
+        ctx.fill();
+        
+        // 미세한 테두리
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.lineWidth = 0.3;
+        ctx.stroke();
+      }
     }
+    
     ctx.restore();
+
+    // 뱀 머리 상단 하이라이트 (Slither.io 시그니처)
+    ctx.beginPath();
+    ctx.ellipse(-headLength * 0.1, -headWidth * 0.2, headLength * 0.4, headWidth * 0.15, -0.1, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fill();
 
     ctx.restore();
 
-    // 뱀의 옆으로 길쭉한 눈
-    const eyeDist = r * 0.4;
-    const eyeR = r * 0.25;
+    // 뱀의 세밀한 눈 (약간 뒤쪽 위치)
+    const eyeDist = r * 0.35;
+    const eyeR = r * 0.22;
     const blinkScale = (this.eyeBlink > 3.85) ? Math.max(0.1, 1 - (this.eyeBlink - 3.85) / 0.15 * 0.9) : 1;
-    this.drawEye(ctx, hx + Math.cos(this.angle - 0.3) * eyeDist, hy + Math.sin(this.angle - 0.3) * eyeDist, eyeR, blinkScale, 'fierce');
-    this.drawEye(ctx, hx + Math.cos(this.angle + 0.3) * eyeDist, hy + Math.sin(this.angle + 0.3) * eyeDist, eyeR, blinkScale, 'fierce');
+    
+    // 눈 위치를 약간 뒤로 (더 현실적)
+    const eyeBackOffset = r * 0.1;
+    const leftEyeX = hx + Math.cos(this.angle - 0.35) * eyeDist - Math.cos(this.angle) * eyeBackOffset;
+    const leftEyeY = hy + Math.sin(this.angle - 0.35) * eyeDist - Math.sin(this.angle) * eyeBackOffset;
+    const rightEyeX = hx + Math.cos(this.angle + 0.35) * eyeDist - Math.cos(this.angle) * eyeBackOffset;
+    const rightEyeY = hy + Math.sin(this.angle + 0.35) * eyeDist - Math.sin(this.angle) * eyeBackOffset;
+    
+    this.drawEye(ctx, leftEyeX, leftEyeY, eyeR, blinkScale, 'fierce');
+    this.drawEye(ctx, rightEyeX, rightEyeY, eyeR, blinkScale, 'fierce');
 
     // 뱀 혀 (항상 보임)
     this.drawSnakeTongue(ctx, hx, hy, r);
     
-    // 콧구멍
+    // 정교한 콧구멍
     this.drawNostrils(ctx, hx, hy, r);
   }
 
@@ -617,44 +682,90 @@ export class Worm {
     this.drawNostrils(ctx, hx, hy, r);
   }
 
-  // Stage 4: 용 머리 - 뿔 + 수염 + 용 형태
+  // Stage 4: 용 머리 - 전설급 드래곤 헤드
   drawDragonHead(ctx, hx, hy, r, evo) {
     this.drawBodyConnector(ctx, hx, hy, r);
     this.drawAuraAndBossEffects(ctx, hx, hy, r, evo);
 
-    // 용 날개 (머리 뒤)
+    // 용 날개 (머리 뒤에, 더 크고 화려하게)
     this.drawDragonWings(ctx, hx, hy, r);
 
-    // 용의 긴 머리
+    // 전설의 드래곤 머리
     ctx.save();
     ctx.translate(hx, hy);
     ctx.rotate(this.angle);
 
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 5;
-    ctx.shadowBlur = 8;
+    // 강력한 드래곤 그림자
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowOffsetX = 4;
+    ctx.shadowOffsetY = 6;
+    ctx.shadowBlur = 12;
 
-    const headLength = r * 1.8;
-    const headWidth = r * 1.4;
+    const headLength = r * 2.0;
+    const headWidth = r * 1.3;
+    const jawWidth = r * 1.1;
+    const neckWidth = r * 0.9;
     
-    const grad = ctx.createRadialGradient(-headLength * 0.2, -headWidth * 0.2, 0, 0, 0, headLength);
-    grad.addColorStop(0, this.lightenColor(this.color.h, 1.5));
-    grad.addColorStop(0.2, this.color.h);
-    grad.addColorStop(0.6, this.color.b);
-    grad.addColorStop(0.9, this.darkenColor(this.color.b, 0.6));
-    grad.addColorStop(1, '#1a0000');
+    // 용암 같은 8단계 머리 그라디언트
+    const dragonHeadGrad = ctx.createRadialGradient(-headLength * 0.15, -headWidth * 0.25, 0, 0, 0, headLength * 0.9);
+    dragonHeadGrad.addColorStop(0, this.lightenColor(this.color.h, 2.0));    // 백열 하이라이트
+    dragonHeadGrad.addColorStop(0.1, this.lightenColor(this.color.h, 1.6));  
+    dragonHeadGrad.addColorStop(0.25, this.lightenColor(this.color.h, 1.3)); 
+    dragonHeadGrad.addColorStop(0.4, this.color.h);
+    dragonHeadGrad.addColorStop(0.55, this.color.b);
+    dragonHeadGrad.addColorStop(0.7, this.darkenColor(this.color.b, 0.8));
+    dragonHeadGrad.addColorStop(0.85, '#3d2517'); // 어두운 갈색
+    dragonHeadGrad.addColorStop(1, '#1a0d06');    // 거의 검정
 
-    // 용 머리 형태
+    // 복잡한 용 머리 형태 (턱선 분리, 더 현실적)
     ctx.beginPath();
-    ctx.moveTo(headLength * 0.7, 0);
-    ctx.quadraticCurveTo(headLength * 0.3, -headWidth * 0.3, 0, -headWidth * 0.5);
-    ctx.quadraticCurveTo(-headLength * 0.4, -headWidth * 0.3, -headLength * 0.6, -headWidth * 0.1);
-    ctx.quadraticCurveTo(-headLength * 0.8, 0, -headLength * 0.6, headWidth * 0.1);
-    ctx.quadraticCurveTo(-headLength * 0.4, headWidth * 0.3, 0, headWidth * 0.5);
-    ctx.quadraticCurveTo(headLength * 0.3, headWidth * 0.3, headLength * 0.7, 0);
+    // 상단 턱 (코부터 시작)
+    ctx.moveTo(headLength * 0.75, 0);
+    
+    // 코 → 이마 곡선
+    ctx.bezierCurveTo(
+      headLength * 0.6, -headWidth * 0.15,
+      headLength * 0.4, -headWidth * 0.35,
+      headLength * 0.1, -headWidth * 0.45
+    );
+    
+    // 이마 → 뒷머리
+    ctx.bezierCurveTo(
+      -headLength * 0.1, -headWidth * 0.5,
+      -headLength * 0.3, -headWidth * 0.35,
+      -headLength * 0.5, -headWidth * 0.2
+    );
+    
+    // 목 연결부 (상단)
+    ctx.bezierCurveTo(
+      -headLength * 0.7, -neckWidth * 0.15,
+      -headLength * 0.8, -neckWidth * 0.05,
+      -headLength * 0.85, 0
+    );
+    
+    // 목 → 하단 턱 시작
+    ctx.bezierCurveTo(
+      -headLength * 0.8, neckWidth * 0.05,
+      -headLength * 0.7, neckWidth * 0.15,
+      -headLength * 0.5, headWidth * 0.25
+    );
+    
+    // 하단 턱선 (더 두꺼운 턱)
+    ctx.bezierCurveTo(
+      -headLength * 0.3, jawWidth * 0.4,
+      -headLength * 0.1, jawWidth * 0.5,
+      headLength * 0.15, jawWidth * 0.45
+    );
+    
+    // 턱 → 코 끝
+    ctx.bezierCurveTo(
+      headLength * 0.4, jawWidth * 0.35,
+      headLength * 0.6, jawWidth * 0.15,
+      headLength * 0.75, 0
+    );
+    
     ctx.closePath();
-    ctx.fillStyle = grad;
+    ctx.fillStyle = dragonHeadGrad;
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
@@ -662,50 +773,108 @@ export class Worm {
     ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 0;
 
-    // 용 비늘 무늬
+    // 전설급 용 비늘 패턴 (머리)
     ctx.save();
     ctx.clip();
-    ctx.strokeStyle = 'rgba(255,60,0,0.3)';
-    ctx.fillStyle = 'rgba(255,100,0,0.1)';
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 5; i++) {
-      const x = -headLength * 0.4 + i * headLength * 0.15;
-      const y = (i % 2) * headWidth * 0.15 - headWidth * 0.075;
-      ctx.beginPath();
-      for (let j = 0; j < 5; j++) {
-        const angle = (j * 2 * Math.PI) / 5 - Math.PI / 2;
-        const px = x + Math.cos(angle) * headLength * 0.08;
-        const py = y + Math.sin(angle) * headWidth * 0.08;
-        if (j === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+    
+    const headScaleRows = 6;
+    const scalesPerHeadRow = 8;
+    
+    for (let row = 0; row < headScaleRows; row++) {
+      for (let col = 0; col < scalesPerHeadRow; col++) {
+        const progressX = row / (headScaleRows - 1);
+        const progressY = (col - scalesPerHeadRow/2) / (scalesPerHeadRow/2);
+        
+        const x = -headLength * 0.6 + progressX * headLength * 0.9;
+        const maxWidth = headWidth * (0.2 + 0.6 * Math.sin(progressX * Math.PI * 0.8));
+        const y = progressY * maxWidth * 0.8;
+        
+        const scaleSize = r * (0.12 + progressX * 0.08);
+        
+        // 불타는 스케일 그라디언트
+        const fireScaleGrad = ctx.createRadialGradient(
+          x - scaleSize * 0.3, y - scaleSize * 0.3, 0, 
+          x, y, scaleSize * 0.8
+        );
+        fireScaleGrad.addColorStop(0, 'rgba(255,240,200,0.4)');
+        fireScaleGrad.addColorStop(0.3, 'rgba(255,150,50,0.25)');
+        fireScaleGrad.addColorStop(0.7, 'rgba(200,80,20,0.2)');
+        fireScaleGrad.addColorStop(1, 'rgba(100,30,10,0.3)');
+        
+        // 용 머리 펜타곤 스케일
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2 + (row * 0.15);
+          const radius = scaleSize * (0.6 + Math.sin(i * 1.5) * 0.1);
+          const px = x + Math.cos(angle) * radius;
+          const py = y + Math.sin(angle) * radius;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = fireScaleGrad;
+        ctx.fill();
+        
+        // 불타는 테두리
+        ctx.strokeStyle = 'rgba(255,100,30,0.5)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        
+        // 용의 심장부 - 작은 불꽃
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,${150 + Math.sin(this.wobble * 5 + row + col) * 50},0,0.9)`;
+        ctx.fill();
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
     }
+    
     ctx.restore();
+
+    // 드래곤 머리 상단 메탈릭 하이라이트
+    const metalHeadGrad = ctx.createRadialGradient(
+      -headLength * 0.1, -headWidth * 0.3, 0,
+      headLength * 0.1, -headWidth * 0.2, headLength * 0.4
+    );
+    metalHeadGrad.addColorStop(0, 'rgba(255,255,255,0.5)');
+    metalHeadGrad.addColorStop(0.3, 'rgba(255,220,150,0.3)');
+    metalHeadGrad.addColorStop(0.7, 'rgba(255,150,50,0.2)');
+    metalHeadGrad.addColorStop(1, 'rgba(255,100,0,0.1)');
+    
+    ctx.beginPath();
+    ctx.ellipse(0, -headWidth * 0.25, headLength * 0.35, headWidth * 0.2, -0.05, 0, Math.PI * 2);
+    ctx.fillStyle = metalHeadGrad;
+    ctx.fill();
 
     ctx.restore();
 
-    // 용의 뿔
+    // 드래곤의 위엄있는 뿔
     this.drawDragonHorns(ctx, hx, hy, r);
 
-    // 용의 수염
+    // 용의 긴 수염
     this.drawDragonWhiskers(ctx, hx, hy, r);
 
-    // 용 눈
-    const eyeDist = r * 0.5;
-    const eyeR = r * 0.3;
+    // 전설의 용 눈 (더 크고 위엄있게)
+    const eyeDist = r * 0.45;
+    const eyeR = r * 0.28;
     const blinkScale = (this.eyeBlink > 3.85) ? Math.max(0.1, 1 - (this.eyeBlink - 3.85) / 0.15 * 0.9) : 1;
-    this.drawEye(ctx, hx + Math.cos(this.angle - 0.2) * eyeDist, hy + Math.sin(this.angle - 0.2) * eyeDist, eyeR, blinkScale, 'dragon');
-    this.drawEye(ctx, hx + Math.cos(this.angle + 0.2) * eyeDist, hy + Math.sin(this.angle + 0.2) * eyeDist, eyeR, blinkScale, 'dragon');
+    
+    // 눈 위치를 약간 뒤로 (용다운 위치)
+    const eyeBackOffset = r * 0.15;
+    const leftDragonEyeX = hx + Math.cos(this.angle - 0.25) * eyeDist - Math.cos(this.angle) * eyeBackOffset;
+    const leftDragonEyeY = hy + Math.sin(this.angle - 0.25) * eyeDist - Math.sin(this.angle) * eyeBackOffset;
+    const rightDragonEyeX = hx + Math.cos(this.angle + 0.25) * eyeDist - Math.cos(this.angle) * eyeBackOffset;
+    const rightDragonEyeY = hy + Math.sin(this.angle + 0.25) * eyeDist - Math.sin(this.angle) * eyeBackOffset;
+    
+    this.drawEye(ctx, leftDragonEyeX, leftDragonEyeY, eyeR, blinkScale, 'dragon');
+    this.drawEye(ctx, rightDragonEyeX, rightDragonEyeY, eyeR, blinkScale, 'dragon');
 
     // 용의 입에서 불 (부스트 시)
     if (this.boosting) {
       this.drawDragonFire(ctx, hx, hy, r);
     }
 
-    this.drawNostrils(ctx, hx, hy, r);
+    // 드래곤 콧구멍 (더 크고 연기가)
+    this.drawDragonNostrils(ctx, hx, hy, r);
   }
 
   // 헬퍼 메서드들
@@ -813,28 +982,59 @@ export class Worm {
   }
 
   drawSnakeTongue(ctx, hx, hy, r) {
-    // 뱀 혀는 항상 보임 (더 길고 빨간색)
-    const tongueBase = r * 0.8;
-    const tongueLen = r * 1.2;
+    // Slither.io급 현실적인 뱀 혀
+    const tongueBase = r * 0.9;
+    const tongueLen = r * 1.4;
     const tbx = hx + Math.cos(this.angle) * tongueBase;
     const tby = hy + Math.sin(this.angle) * tongueBase;
-    const flicker = Math.sin(this.wobble * 20) * 0.3; // 더 빠른 진동
+    const flicker = Math.sin(this.wobble * 25 + Math.sin(this.wobble * 8)) * 0.4; // 더 자연스러운 진동
     const perpAngle = this.angle + Math.PI / 2;
 
-    ctx.strokeStyle = '#dd1111';
-    ctx.lineWidth = Math.max(1.5, r * 0.08);
+    // 혀 중앙 베이스 (더 두꺼운)
+    ctx.strokeStyle = '#cc1818';
+    ctx.lineWidth = Math.max(2, r * 0.1);
     ctx.lineCap = 'round';
+    
+    ctx.beginPath();
+    ctx.moveTo(hx + Math.cos(this.angle) * r * 0.6, hy + Math.sin(this.angle) * r * 0.6);
+    ctx.lineTo(tbx, tby);
+    ctx.stroke();
 
-    // 더 긴 갈래 혀
-    for (const side of [-0.25, 0.25]) {
+    // 두 갈래 혀 (더 현실적인 형태)
+    ctx.lineWidth = Math.max(1.2, r * 0.06);
+    
+    for (const side of [-0.3, 0.3]) {
+      // 혀끝 위치 계산 (더 복잡한 움직임)
+      const forkFlicker = flicker + side * 0.5;
+      const tipX = tbx + Math.cos(this.angle + forkFlicker) * tongueLen;
+      const tipY = tby + Math.sin(this.angle + forkFlicker) * tongueLen;
+      
+      // 혀 중간 제어점 (더 자연스러운 곡선)
+      const midX = tbx + Math.cos(this.angle) * tongueLen * 0.6;
+      const midY = tby + Math.sin(this.angle) * tongueLen * 0.6;
+      const sideOffset = Math.cos(perpAngle) * r * side * 0.4;
+      const sideOffsetY = Math.sin(perpAngle) * r * side * 0.4;
+      
+      // 그라디언트 색상 (끝으로 갈수록 어두워짐)
+      const gradient = ctx.createLinearGradient(tbx, tby, tipX, tipY);
+      gradient.addColorStop(0, '#ee2222');
+      gradient.addColorStop(0.7, '#cc1818');
+      gradient.addColorStop(1, '#aa1111');
+      ctx.strokeStyle = gradient;
+      
       ctx.beginPath();
       ctx.moveTo(tbx, tby);
-      const tipX = tbx + Math.cos(this.angle + flicker + side) * tongueLen;
-      const tipY = tby + Math.sin(this.angle + flicker + side) * tongueLen;
-      const cpx = tbx + Math.cos(this.angle) * tongueLen * 0.6 + Math.cos(perpAngle) * r * side * 0.3;
-      const cpy = tby + Math.sin(this.angle) * tongueLen * 0.6 + Math.sin(perpAngle) * r * side * 0.3;
-      ctx.quadraticCurveTo(cpx, cpy, tipX, tipY);
+      ctx.quadraticCurveTo(
+        midX + sideOffset, midY + sideOffsetY,
+        tipX, tipY
+      );
       ctx.stroke();
+      
+      // 혀끝 강조 점
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 1, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff3333';
+      ctx.fill();
     }
   }
 
@@ -905,42 +1105,64 @@ export class Worm {
   }
 
   drawDragonWings(ctx, hx, hy, r) {
-    const flapAngle = Math.sin(this.wobble * 4) * 0.4;
+    const flapAngle = Math.sin(this.wobble * 3) * 0.5;
+    const flapSpeed = this.boosting ? 2 : 1;
     
     for (const side of [-1, 1]) {
       ctx.save();
       ctx.translate(hx, hy);
       ctx.rotate(this.angle - Math.PI / 2);
       ctx.scale(side, 1);
-      ctx.rotate(flapAngle * side);
+      ctx.rotate(flapAngle * side * flapSpeed);
 
-      const wingGrad = ctx.createLinearGradient(0, 0, -r * 3.0, 0);
-      wingGrad.addColorStop(0, this.color.h);
-      wingGrad.addColorStop(0.3, this.color.l);
-      wingGrad.addColorStop(0.8, this.color.b);
-      wingGrad.addColorStop(1, this.darkenColor(this.color.b, 0.6));
+      // 전설급 날개 크기
+      const wingSpan = r * 3.5;
+      const wingHeight = r * 2.8;
 
-      ctx.globalAlpha = 0.8;
-      ctx.fillStyle = wingGrad;
+      // 화려한 날개 그라디언트 (용암 효과)
+      const wingFireGrad = ctx.createLinearGradient(0, 0, -wingSpan, 0);
+      wingFireGrad.addColorStop(0, this.lightenColor(this.color.h, 1.2));
+      wingFireGrad.addColorStop(0.2, this.color.h);
+      wingFireGrad.addColorStop(0.4, this.color.l);
+      wingFireGrad.addColorStop(0.6, this.color.b);
+      wingFireGrad.addColorStop(0.8, this.darkenColor(this.color.b, 0.7));
+      wingFireGrad.addColorStop(1, '#2d1810');
 
-      // 더 큰 용 날개
+      // 날개 투명도 (박쥐 날개 느낌)
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = wingFireGrad;
+
+      // 더 현실적인 용 날개 형태
       ctx.beginPath();
-      ctx.moveTo(r * 0.1, -r * 0.1);
-      ctx.quadraticCurveTo(-r * 1.5, -r * 2.5, -r * 3.0, -r * 0.8);
-      ctx.quadraticCurveTo(-r * 2.8, -r * 0.2, -r * 2.5, r * 0.4);
-      ctx.quadraticCurveTo(-r * 2.0, r * 0.8, -r * 1.5, r * 0.6);
-      ctx.quadraticCurveTo(-r * 0.6, r * 0.5, r * 0.1, r * 0.3);
+      // 날개 상단
+      ctx.moveTo(r * 0.15, -r * 0.2);
+      ctx.bezierCurveTo(-r * 0.8, -wingHeight * 0.9, -wingSpan * 0.7, -wingHeight * 0.6, -wingSpan, -r * 0.3);
+      
+      // 날개 끝 → 하단
+      ctx.bezierCurveTo(-wingSpan * 0.9, r * 0.1, -wingSpan * 0.8, r * 0.5, -wingSpan * 0.6, wingHeight * 0.5);
+      
+      // 하단 곡선
+      ctx.bezierCurveTo(-wingSpan * 0.5, wingHeight * 0.7, -r * 1.5, wingHeight * 0.8, -r * 0.8, wingHeight * 0.6);
+      
+      // 몸통 연결
+      ctx.bezierCurveTo(-r * 0.4, wingHeight * 0.4, -r * 0.2, r * 0.3, r * 0.15, r * 0.2);
+      
       ctx.closePath();
       ctx.fill();
 
-      // 날개 뼈대
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-      ctx.lineWidth = 2;
+      // 날개막 세부 구조 (박쥐 날개의 손가락뼈)
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = 2.5;
+      
       const wingBones = [
-        [0, -r * 1.5, -r * 2.2, -r * 0.6],
-        [0, -r * 0.5, -r * 2.5, r * 0.2],
-        [0, r * 0.2, -r * 1.8, r * 0.6]
+        // 주요 뼈대 5개
+        [r * 0.1, -r * 0.1, -wingSpan * 0.7, -wingHeight * 0.5],
+        [r * 0.1, 0, -wingSpan * 0.9, -r * 0.1],
+        [r * 0.1, 0, -wingSpan * 0.8, r * 0.3],
+        [r * 0.1, r * 0.1, -wingSpan * 0.6, wingHeight * 0.4],
+        [r * 0.1, r * 0.1, -r * 0.8, wingHeight * 0.55]
       ];
+      
       for (const [sx, sy, ex, ey] of wingBones) {
         ctx.beginPath();
         ctx.moveTo(sx, sy);
@@ -948,13 +1170,46 @@ export class Worm {
         ctx.stroke();
       }
 
-      // 날개 하이라이트
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 1;
+      // 날개막 연결선 (더 세밀한)
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = 1.5;
+      
+      // 수평 연결선들
+      const horizontalLines = [
+        [-r * 0.5, -wingHeight * 0.4, -wingSpan * 0.5, -wingHeight * 0.3],
+        [-r * 0.8, -r * 0.05, -wingSpan * 0.7, r * 0.1],
+        [-r * 0.7, wingHeight * 0.25, -wingSpan * 0.4, wingHeight * 0.35]
+      ];
+      
+      for (const [sx, sy, ex, ey] of horizontalLines) {
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
+
+      // 날개 상단 메탈릭 하이라이트
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(r * 0.1, -r * 0.1);
-      ctx.quadraticCurveTo(-r * 1.2, -r * 2.0, -r * 2.5, -r * 0.6);
+      ctx.moveTo(r * 0.15, -r * 0.2);
+      ctx.bezierCurveTo(-r * 0.6, -wingHeight * 0.7, -wingSpan * 0.5, -wingHeight * 0.4, -wingSpan * 0.8, -r * 0.2);
       ctx.stroke();
+
+      // 날개 가장자리 불꽃 효과 (부스트 시)
+      if (this.boosting) {
+        ctx.strokeStyle = 'rgba(255,120,0,0.6)';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = 'rgba(255,100,0,0.8)';
+        ctx.shadowBlur = 8;
+        
+        ctx.beginPath();
+        ctx.moveTo(r * 0.15, -r * 0.2);
+        ctx.bezierCurveTo(-r * 0.8, -wingHeight * 0.9, -wingSpan * 0.7, -wingHeight * 0.6, -wingSpan, -r * 0.3);
+        ctx.stroke();
+        
+        ctx.shadowBlur = 0;
+      }
 
       ctx.globalAlpha = 1;
       ctx.restore();
@@ -1019,27 +1274,90 @@ export class Worm {
   }
 
   drawDragonFire(ctx, hx, hy, r) {
-    const fireLength = r * 2;
-    const fireBase = hx + Math.cos(this.angle) * r * 0.8;
-    const fireBaseY = hy + Math.sin(this.angle) * r * 0.8;
+    const fireLength = r * 2.5;
+    const fireBase = hx + Math.cos(this.angle) * r * 0.9;
+    const fireBaseY = hy + Math.sin(this.angle) * r * 0.9;
     
-    // 불꽃 파티클들
-    for (let i = 0; i < 8; i++) {
-      const angle = this.angle + (Math.random() - 0.5) * 0.6;
-      const distance = fireLength * (0.5 + Math.random() * 0.5);
-      const fx = fireBase + Math.cos(angle) * distance;
-      const fy = fireBaseY + Math.sin(angle) * distance;
-      const size = Math.random() * r * 0.3 + 2;
-      
-      const fireColors = ['#ff4400', '#ff6600', '#ff8800', '#ffaa00', '#ffcc00'];
-      const color = fireColors[Math.floor(Math.random() * fireColors.length)];
+    // 드래곤 브레스 - 화염 방사기 효과
+    const fireSpread = 0.8;
+    const particleCount = 15 + Math.floor(Math.random() * 10);
+    
+    // 중앙 화염 코어
+    const coreGrad = ctx.createRadialGradient(fireBase, fireBaseY, 0, fireBase, fireBaseY, r * 0.8);
+    coreGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    coreGrad.addColorStop(0.3, 'rgba(255,200,100,0.8)');
+    coreGrad.addColorStop(0.7, 'rgba(255,100,0,0.6)');
+    coreGrad.addColorStop(1, 'rgba(200,50,0,0.3)');
+    
+    ctx.beginPath();
+    ctx.arc(fireBase, fireBaseY, r * 0.6, 0, Math.PI * 2);
+    ctx.fillStyle = coreGrad;
+    ctx.fill();
+    
+    // 화염 파티클들 (3단계 레이어)
+    const fireStages = [
+      { count: 8, sizeMin: 4, sizeMax: 8, colors: ['#ffffff', '#fff8dc', '#fffacd'] },      // 화이트 핫
+      { count: 12, sizeMin: 3, sizeMax: 6, colors: ['#ffd700', '#ffa500', '#ff8c00'] },    // 골든 오렌지
+      { count: 15, sizeMin: 2, sizeMax: 5, colors: ['#ff4500', '#ff0000', '#dc143c'] }     // 딥 레드
+    ];
+    
+    fireStages.forEach((stage, layerIndex) => {
+      for (let i = 0; i < stage.count; i++) {
+        const progress = i / stage.count;
+        const angle = this.angle + (Math.random() - 0.5) * fireSpread * (1 + layerIndex * 0.3);
+        const distance = fireLength * (0.3 + Math.random() * 0.7) * (1 + layerIndex * 0.2);
+        
+        const fx = fireBase + Math.cos(angle) * distance;
+        const fy = fireBaseY + Math.sin(angle) * distance;
+        
+        const size = stage.sizeMin + Math.random() * (stage.sizeMax - stage.sizeMin);
+        const color = stage.colors[Math.floor(Math.random() * stage.colors.length)];
+        
+        // 각 파티클마다 미니 그라디언트
+        const particleGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, size);
+        particleGrad.addColorStop(0, color);
+        particleGrad.addColorStop(1, color + '00'); // 투명
+        
+        ctx.beginPath();
+        ctx.arc(fx, fy, size, 0, Math.PI * 2);
+        ctx.fillStyle = particleGrad;
+        ctx.globalAlpha = (0.6 + Math.random() * 0.4) * (1 - layerIndex * 0.2);
+        ctx.fill();
+      }
+    });
+    
+    // 화염 가장자리 스파크 효과
+    for (let i = 0; i < 6; i++) {
+      const sparkAngle = this.angle + (Math.random() - 0.5) * fireSpread * 1.5;
+      const sparkDist = fireLength * (0.8 + Math.random() * 0.4);
+      const sparkX = fireBase + Math.cos(sparkAngle) * sparkDist;
+      const sparkY = fireBaseY + Math.sin(sparkAngle) * sparkDist;
       
       ctx.beginPath();
-      ctx.arc(fx, fy, size, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+      ctx.arc(sparkX, sparkY, 1 + Math.random() * 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffff00'; // 밝은 노랑 스파크
+      ctx.globalAlpha = 0.8 + Math.random() * 0.2;
       ctx.fill();
     }
+    
+    // 화염 줄기 (연속적인 불꽃 스트림)
+    const streamGrad = ctx.createLinearGradient(fireBase, fireBaseY, 
+      fireBase + Math.cos(this.angle) * fireLength, fireBaseY + Math.sin(this.angle) * fireLength);
+    streamGrad.addColorStop(0, 'rgba(255,255,255,0.4)');
+    streamGrad.addColorStop(0.3, 'rgba(255,150,0,0.3)');
+    streamGrad.addColorStop(0.7, 'rgba(255,50,0,0.2)');
+    streamGrad.addColorStop(1, 'rgba(100,0,0,0.1)');
+    
+    ctx.beginPath();
+    ctx.ellipse(
+      fireBase + Math.cos(this.angle) * fireLength * 0.4,
+      fireBaseY + Math.sin(this.angle) * fireLength * 0.4,
+      fireLength * 0.6, r * 0.3, this.angle, 0, Math.PI * 2
+    );
+    ctx.fillStyle = streamGrad;
+    ctx.globalAlpha = 0.5;
+    ctx.fill();
+    
     ctx.globalAlpha = 1;
   }
 
@@ -1282,5 +1600,53 @@ export class Worm {
     }
 
     ctx.restore();
+  }
+
+  // 드래곤 전용 콧구멍 (연기 효과)
+  drawDragonNostrils(ctx, hx, hy, r) {
+    const nostrilDist = r * 0.6;
+    const nostrilSpread = 0.4;
+    const nr = Math.max(2, r * 0.08);
+    
+    // 드래곤 콧구멍 (더 크고 타원형)
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    for (const offset of [-nostrilSpread, nostrilSpread]) {
+      const nx = hx + Math.cos(this.angle + offset) * nostrilDist;
+      const ny = hy + Math.sin(this.angle + offset) * nostrilDist;
+      
+      ctx.save();
+      ctx.translate(nx, ny);
+      ctx.rotate(this.angle);
+      
+      // 타원형 콧구멍
+      ctx.beginPath();
+      ctx.ellipse(0, 0, nr * 1.5, nr * 0.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 콧구멍 내부 하이라이트
+      ctx.beginPath();
+      ctx.ellipse(-nr * 0.3, -nr * 0.2, nr * 0.4, nr * 0.2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,100,50,0.3)';
+      ctx.fill();
+      
+      // 연기 효과 (휴식 시에도 약간)
+      if (Math.random() < 0.3) {
+        const smokeParticles = this.boosting ? 3 : 1;
+        for (let i = 0; i < smokeParticles; i++) {
+          const smokeX = nr * (1 + Math.random() * 2);
+          const smokeY = (Math.random() - 0.5) * nr * 0.5;
+          const smokeSize = 1 + Math.random() * 2;
+          
+          ctx.beginPath();
+          ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+          ctx.fillStyle = this.boosting ? 
+            `rgba(255,${100 + Math.random() * 100},0,${0.4 + Math.random() * 0.4})` :
+            `rgba(150,150,150,${0.2 + Math.random() * 0.3})`;
+          ctx.fill();
+        }
+      }
+      
+      ctx.restore();
+    }
   }
 }
