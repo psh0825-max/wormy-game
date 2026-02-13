@@ -115,10 +115,18 @@ canvas { display: block; }
   transform: scale(1.15);
   box-shadow: 0 0 20px rgba(255,255,255,0.3);
 }
+.color-btn:active {
+  transform: scale(1.1);
+}
 .color-btn.selected {
   border-color: #fff;
   transform: scale(1.2);
   box-shadow: 0 0 30px rgba(255,255,255,0.4);
+  animation: colorPulse 2s ease-in-out infinite;
+}
+@keyframes colorPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(255,255,255,0.4); }
+  50% { box-shadow: 0 0 40px rgba(255,255,255,0.6); }
 }
 .color-btn::after {
   content: '';
@@ -161,10 +169,51 @@ canvas { display: block; }
   cursor: pointer;
   transition: all 0.3s;
   letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+.play-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+.play-btn:hover::before {
+  transform: translateX(100%);
 }
 .play-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 30px rgba(196, 77, 255, 0.4);
+  box-shadow: 0 8px 30px rgba(196, 77, 255, 0.6);
+}
+
+/* Controls Guide */
+.controls-guide {
+  margin-top: clamp(16px, 3vh, 24px);
+  width: clamp(240px, 70vw, 320px);
+}
+.controls-title {
+  font-size: clamp(12px, 3vw, 15px);
+  color: #88ccff;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  background: rgba(20, 20, 60, 0.4);
+  border-radius: 12px;
+  padding: clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 16px);
+  border: 1px solid rgba(100, 100, 200, 0.15);
+}
+.control-item {
+  font-size: clamp(9px, 2.2vw, 11px);
+  color: #aabbdd;
+  text-align: center;
+  padding: 2px 0;
 }
 
 /* ─── HUD ─────────────────────────────────────────── */
@@ -194,7 +243,16 @@ canvas { display: block; }
 }
 .score-label { font-size: clamp(9px, 2.2vw, 11px); color: #8888bb; text-transform: uppercase; letter-spacing: 1px; }
 .score-value { font-size: clamp(20px, 6vw, 32px); font-weight: 800; display: flex; align-items: center; gap: 6px; }
-.score-length { font-size: clamp(10px, 2.5vw, 13px); color: #aaaadd; margin-top: 2px; }
+.score-length { 
+  font-size: clamp(10px, 2.5vw, 13px); 
+  color: #aaaadd; 
+  margin-top: 2px; 
+  transition: all 0.2s ease-out;
+}
+.score-length.updated { 
+  transform: scale(1.1); 
+  color: #ffdd44; 
+}
 
 /* Evolution badge */
 .evo-badge {
@@ -325,13 +383,19 @@ canvas { display: block; }
   box-shadow: 0 4px 20px rgba(255, 85, 34, 0.4);
   position: relative;
 }
-.minion-btn:hover { transform: scale(1.1); }
-.minion-btn:active { transform: scale(0.95); }
+.minion-btn:hover { 
+  transform: scale(1.1); 
+  box-shadow: 0 6px 25px rgba(255, 85, 34, 0.6);
+}
+.minion-btn:active { 
+  transform: scale(0.95); 
+}
 .minion-btn:disabled {
   background: linear-gradient(135deg, #555, #333);
   border-color: rgba(255,255,255,0.1);
   box-shadow: none;
   cursor: not-allowed;
+  transform: none !important;
 }
 .minion-btn .btn-icon { font-size: clamp(18px, 5vw, 24px); line-height: 1; }
 .minion-btn .btn-text { font-size: clamp(8px, 2vw, 10px); margin-top: 2px; }
@@ -365,8 +429,15 @@ canvas { display: block; }
   transition: all 0.3s;
   box-shadow: 0 4px 20px rgba(34, 85, 255, 0.4);
 }
-.boost-btn:hover { transform: scale(1.1); }
-.boost-btn:active { transform: scale(0.95); background: linear-gradient(135deg, #66ccff, #4477ff); }
+.boost-btn:hover { 
+  transform: scale(1.1); 
+  box-shadow: 0 6px 25px rgba(34, 85, 255, 0.6);
+}
+.boost-btn:active { 
+  transform: scale(0.95); 
+  background: linear-gradient(135deg, #66ccff, #4477ff);
+  box-shadow: 0 8px 30px rgba(102, 204, 255, 0.8);
+}
 
 /* ─── Game Over ───────────────────────────────────── */
 #game-over {
@@ -426,10 +497,23 @@ canvas { display: block; }
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.go-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+.go-btn:hover::before {
+  transform: translateX(100%);
 }
 .go-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 30px rgba(196, 77, 255, 0.4);
+  box-shadow: 0 8px 30px rgba(196, 77, 255, 0.6);
 }
 
 /* ─── Minimap ─────────────────────────────────────── */

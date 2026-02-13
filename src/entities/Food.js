@@ -46,13 +46,23 @@ export class Food {
     const isLarge = this.tier.id === 'large';
     const isGolden = this.tier.golden;
 
-    // ── Golden pulsing ring ──
+    // ── Enhanced golden pulsing rings ──
     if (isGolden) {
       const ringPulse = 1 + Math.sin(frameCount * 0.06 + this.phase) * 0.3;
+      const ringPulse2 = 1 + Math.sin(frameCount * 0.08 + this.phase + 1) * 0.25;
+      
+      // Outer ring
       ctx.beginPath();
-      ctx.arc(sx, sy, r + 4 * ringPulse, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(255,215,0,${0.3 + Math.sin(frameCount * 0.05) * 0.15})`;
-      ctx.lineWidth = 1.5;
+      ctx.arc(sx, sy, r + 6 * ringPulse, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,215,0,${0.25 + Math.sin(frameCount * 0.05) * 0.12})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Inner ring
+      ctx.beginPath();
+      ctx.arc(sx, sy, r + 2 * ringPulse2, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,255,100,${0.4 + Math.sin(frameCount * 0.07) * 0.2})`;
+      ctx.lineWidth = 1;
       ctx.stroke();
     }
 

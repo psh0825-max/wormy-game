@@ -144,13 +144,22 @@ export function killWorm(victim, killer) {
     foods.push(f);
   }
 
-  // Particles
-  for (let i = 0; i < 20; i++) {
+  // Enhanced death particle explosion
+  const particleCount = Math.min(30 + Math.floor(victim.length / 10), 50); // More particles for bigger worms
+  for (let i = 0; i < particleCount; i++) {
     const seg = victim.segments[randInt(0, victim.segments.length - 1)];
-    particles.push(particlePool.acquire(seg.x, seg.y, victim.color.l, rand(3, 6)));
+    const colors = [victim.color.l, victim.color.h, '#ffffff'];
+    const color = colors[randInt(0, colors.length - 1)];
+    const size = rand(2, 8);
+    particles.push(particlePool.acquire(
+      seg.x + rand(-20, 20), 
+      seg.y + rand(-20, 20), 
+      color, 
+      size
+    ));
   }
 
-  killer.length += victim.length * 0.3;
+  killer.length += victim.length * 0.2; // Reduced from 0.3 to 0.2 for better balance
   killer.score += Math.floor(victim.score * 0.5) + 50;
 
   if (killer.isMinion && killer.minionOwner) {

@@ -29,38 +29,46 @@ for (let i = 0; i < DUST_COUNT; i++) {
   });
 }
 
-export function drawBackground() {
+export function drawBackground(cam = null) {
   const { ctx, camera, W, H, frameCount } = state;
+  const actualCamera = cam || camera;
 
-  const offX = -camera.x + W / 2;
-  const offY = -camera.y + H / 2;
+  const offX = -actualCamera.x + W / 2;
+  const offY = -actualCamera.y + H / 2;
 
-  // ── 3A. Radial gradient background ──
-  const grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
-  grad.addColorStop(0, '#0c0c2d');
+  // ── Enhanced radial gradient background with subtle animation ──
+  const time = frameCount * 0.001;
+  const pulseIntensity = Math.sin(time) * 0.02 + 0.98;
+  const grad = ctx.createRadialGradient(
+    W / 2, H / 2, 0, 
+    W / 2, H / 2, Math.max(W, H) * 0.7 * pulseIntensity
+  );
+  grad.addColorStop(0, `hsl(240, 60%, ${8 + Math.sin(time * 0.5) * 2}%)`);
+  grad.addColorStop(0.6, '#0c0c2d');
   grad.addColorStop(1, '#040412');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // ── 3D. Wave color shift overlay ──
+  // ── Enhanced wave color shift overlay with pulsing ──
   const wave = state.wave || 0;
   if (wave > 0) {
     const hue = (wave * 30) % 360;
-    const waveAlpha = 0.03 + Math.min(wave * 0.005, 0.05);
-    ctx.fillStyle = `hsla(${hue}, 60%, 40%, ${waveAlpha})`;
+    const waveAlpha = (0.03 + Math.min(wave * 0.005, 0.05)) * (1 + Math.sin(frameCount * 0.02) * 0.3);
+    const pulsingHue = hue + Math.sin(frameCount * 0.01) * 10;
+    ctx.fillStyle = `hsla(${pulsingHue}, 70%, 45%, ${waveAlpha})`;
     ctx.fillRect(0, 0, W, H);
   }
 
   // ── 3B. Star field with parallax + twinkle ──
-  const viewLeft = camera.x - W / 2;
-  const viewTop = camera.y - H / 2;
-  const viewRight = camera.x + W / 2;
-  const viewBottom = camera.y + H / 2;
+  const viewLeft = actualCamera.x - W / 2;
+  const viewTop = actualCamera.y - H / 2;
+  const viewRight = actualCamera.x + W / 2;
+  const viewBottom = actualCamera.y + H / 2;
 
   for (const star of stars) {
     // Parallax: shift star position based on camera and depth
-    const sx = star.x - camera.x * star.depth + W / 2;
-    const sy = star.y - camera.y * star.depth + H / 2;
+    const sx = star.x - actualCamera.x * star.depth + W / 2;
+    const sy = star.y - actualCamera.y * star.depth + H / 2;
 
     // Wrap stars into view
     const wrappedX = ((sx % W) + W) % W;
@@ -79,21 +87,21 @@ export function drawBackground() {
   // ── 3C. Grid (minor + major) ──
   const gridSize = 60;
   const majorGridSize = 300;
-  const startX = Math.floor((camera.x - W / 2) / gridSize) * gridSize;
-  const startY = Math.floor((camera.y - H / 2) / gridSize) * gridSize;
+  const startX = Math.floor((actualCamera.x - W / 2) / gridSize) * gridSize;
+  const startY = Math.floor((actualCamera.y - H / 2) / gridSize) * gridSize;
 
   // Minor grid
   ctx.strokeStyle = 'rgba(40, 40, 100, 0.12)';
   ctx.lineWidth = 0.5;
   ctx.beginPath();
-  for (let x = startX; x < camera.x + W / 2 + gridSize; x += gridSize) {
+  for (let x = startX; x < actualCamera.x + W / 2 + gridSize; x += gridSize) {
     // Skip major grid lines
     if (x % majorGridSize === 0) continue;
     const sx = x + offX;
     ctx.moveTo(sx, 0);
     ctx.lineTo(sx, H);
   }
-  for (let y = startY; y < camera.y + H / 2 + gridSize; y += gridSize) {
+  for (let y = startY; y < actualCamera.y + H / 2 + gridSize; y += gridSize) {
     if (y % majorGridSize === 0) continue;
     const sy = y + offY;
     ctx.moveTo(0, sy);
@@ -102,17 +110,17 @@ export function drawBackground() {
   ctx.stroke();
 
   // Major grid
-  const majorStartX = Math.floor((camera.x - W / 2) / majorGridSize) * majorGridSize;
-  const majorStartY = Math.floor((camera.y - H / 2) / majorGridSize) * majorGridSize;
+  const majorStartX = Math.floor((actualCamera.x - W / 2) / majorGridSize) * majorGridSize;
+  const majorStartY = Math.floor((actualCamera.y - H / 2) / majorGridSize) * majorGridSize;
   ctx.strokeStyle = 'rgba(50, 50, 120, 0.2)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let x = majorStartX; x < camera.x + W / 2 + majorGridSize; x += majorGridSize) {
+  for (let x = majorStartX; x < actualCamera.x + W / 2 + majorGridSize; x += majorGridSize) {
     const sx = x + offX;
     ctx.moveTo(sx, 0);
     ctx.lineTo(sx, H);
   }
-  for (let y = majorStartY; y < camera.y + H / 2 + majorGridSize; y += majorGridSize) {
+  for (let y = majorStartY; y < actualCamera.y + H / 2 + majorGridSize; y += majorGridSize) {
     const sy = y + offY;
     ctx.moveTo(0, sy);
     ctx.lineTo(W, sy);
@@ -175,7 +183,7 @@ export function drawBackground() {
 
   // Border glow
   const border = CFG.BORDER_MARGIN;
-  if (camera.x - W / 2 < border + 100) {
+  if (actualCamera.x - W / 2 < border + 100) {
     const gx = border + offX;
     const g = ctx.createLinearGradient(gx - 50, 0, gx + 100, 0);
     g.addColorStop(0, 'rgba(255, 50, 80, 0.3)');
@@ -183,7 +191,7 @@ export function drawBackground() {
     ctx.fillStyle = g;
     ctx.fillRect(gx - 50, 0, 150, H);
   }
-  if (camera.x + W / 2 > CFG.WORLD_W - border - 100) {
+  if (actualCamera.x + W / 2 > CFG.WORLD_W - border - 100) {
     const gx = CFG.WORLD_W - border + offX;
     const g = ctx.createLinearGradient(gx + 50, 0, gx - 100, 0);
     g.addColorStop(0, 'rgba(255, 50, 80, 0.3)');
@@ -191,7 +199,7 @@ export function drawBackground() {
     ctx.fillStyle = g;
     ctx.fillRect(gx - 100, 0, 150, H);
   }
-  if (camera.y - H / 2 < border + 100) {
+  if (actualCamera.y - H / 2 < border + 100) {
     const gy = border + offY;
     const g = ctx.createLinearGradient(0, gy - 50, 0, gy + 100);
     g.addColorStop(0, 'rgba(255, 50, 80, 0.3)');
@@ -199,7 +207,7 @@ export function drawBackground() {
     ctx.fillStyle = g;
     ctx.fillRect(0, gy - 50, W, 150);
   }
-  if (camera.y + H / 2 > CFG.WORLD_H - border - 100) {
+  if (actualCamera.y + H / 2 > CFG.WORLD_H - border - 100) {
     const gy = CFG.WORLD_H - border + offY;
     const g = ctx.createLinearGradient(0, gy + 50, 0, gy - 100);
     g.addColorStop(0, 'rgba(255, 50, 80, 0.3)');

@@ -90,7 +90,9 @@ export class Worm {
     this.speed = baseSpd * speedMult * speedSkillMult;
 
     if (this.boosting && this.length > 8) {
-      this.length -= CFG.BOOST_DRAIN * boostDrainMult * dt;
+      // Increased boost drain for large worms for better balance
+      const lengthMultiplier = 1 + (this.length > 100 ? (this.length - 100) * 0.002 : 0);
+      this.length -= CFG.BOOST_DRAIN * boostDrainMult * lengthMultiplier * dt;
       if (this.length < 8) { this.length = 8; this.boosting = false; }
     }
 
@@ -151,11 +153,12 @@ export class Worm {
       if (this.minionTimer <= 0) this.alive = false;
     }
 
-    // Dragon flame particles (stage >= 4)
+    // Dragon flame particles (stage >= 4) - Optimized frequency
     const evoStage = EVOLUTION_STAGES[this.evolutionStage] || EVOLUTION_STAGES[0];
     if (evoStage.trailParticles && this.segments.length > 5) {
       this._flameTimer += dt;
-      if (this._flameTimer > 0.033) {
+      // Reduced from 0.033 to 0.1 (30fps to 10fps particle generation)
+      if (this._flameTimer > 0.1 && state.particles.length < 200) { // Particle count limit
         this._flameTimer = 0;
         const seg = this.segments[Math.min(4, this.segments.length - 1)];
         const colors = ['#ff4400', '#ff6600', '#ff8800', '#ffaa00', '#ffcc00'];
@@ -177,25 +180,31 @@ export class Worm {
     const offX = -cam.x + W / 2;
     const offY = -cam.y + H / 2;
 
-    // Check if visible
+    // Check if visible - tighter bounds for better performance
     const hx = this.head.x + offX;
     const hy = this.head.y + offY;
-    if (hx < -300 || hx > W + 300 || hy < -300 || hy > H + 300) return;
+    if (hx < -250 || hx > W + 250 || hy < -250 || hy > H + 250) return;
 
     const evo = EVOLUTION_STAGES[this.evolutionStage] || EVOLUTION_STAGES[0];
     const stage = this.evolutionStage;
 
-    // ── BODY GLOW OUTLINE (stage 2+) ──
+    // Performance: calculate view bounds once
+    const viewLeft = -offX - 20;
+    const viewRight = -offX + W + 20;
+    const viewTop = -offY - 20;
+    const viewBottom = -offY + H + 20;
+
+    // ── BODY GLOW OUTLINE (stage 2+) ── Optimized to render every 5th segment
     if (stage >= 2 && evo.aura) {
       const glowColor = evo.aura.color;
       const glowAlpha = stage >= 4 ? 0.25 : stage >= 3 ? 0.18 : 0.12;
       const glowExtra = stage >= 4 ? 6 : stage >= 3 ? 4 : 3;
 
-      for (let i = this.segments.length - 1; i >= 0; i -= 2) {
+      for (let i = this.segments.length - 1; i >= 0; i -= 5) { // Changed from i -= 2 to i -= 5
         const seg = this.segments[i];
+        if (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom) continue;
         const sx = seg.x + offX;
         const sy = seg.y + offY;
-        if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
         const r = this.bodyRadius(i);
         const pulse = Math.sin(this.wobble * 2 + i * 0.15) * 0.3 + 1;
         ctx.beginPath();
@@ -205,10 +214,11 @@ export class Worm {
       }
     }
 
-    // Boss body shimmer glow
+    // Boss body shimmer glow - optimized spacing
     if (this.isBoss) {
-      for (let i = this.segments.length - 1; i >= 0; i -= 3) {
+      for (let i = this.segments.length - 1; i >= 0; i -= 4) { // Changed from i -= 3 to i -= 4
         const seg = this.segments[i];
+        if (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom) continue;
         const sx = seg.x + offX;
         const sy = seg.y + offY;
         const r = this.bodyRadius(i);
@@ -219,16 +229,16 @@ export class Worm {
       }
     }
 
-    // ── SEGMENT CONNECTORS (fill gaps between segments) ──
+    // ── SEGMENT CONNECTORS (fill gaps between segments) ── Draw every 2nd connector
     ctx.lineCap = 'round';
-    for (let i = this.segments.length - 1; i >= 2; i--) {
+    for (let i = this.segments.length - 1; i >= 2; i -= 2) { // Changed from i-- to i -= 2
       const seg = this.segments[i];
       const prev = this.segments[i - 1];
+      if (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom) continue;
       const sx = seg.x + offX;
       const sy = seg.y + offY;
       const px = prev.x + offX;
       const py = prev.y + offY;
-      if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
       const r = this.bodyRadius(i);
       ctx.beginPath();
       ctx.moveTo(sx, sy);
@@ -238,14 +248,35 @@ export class Worm {
       ctx.stroke();
     }
 
-    // ── BODY SEGMENTS ──
+    // ── BODY SEGMENTS ── LOD optimization for large worms
+    const centerX = W / 2;
+    const centerY = H / 2;
+    const isLargeWorm = this.segments.length > 50;
+    
     for (let i = this.segments.length - 1; i >= 1; i--) {
       const seg = this.segments[i];
+      if (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom) continue;
+      
       const sx = seg.x + offX;
       const sy = seg.y + offY;
-      if (sx < -50 || sx > W + 50 || sy < -50 || sy > H + 50) continue;
       const r = this.bodyRadius(i);
 
+      // LOD: Use simpler rendering for segments far from screen center
+      if (isLargeWorm) {
+        const distFromCenter = Math.abs(sx - centerX) + Math.abs(sy - centerY);
+        const useSimpleRender = distFromCenter > Math.min(W, H) * 0.4;
+        
+        if (useSimpleRender) {
+          // Simple circle rendering for distant segments
+          ctx.beginPath();
+          ctx.arc(sx, sy, r, 0, Math.PI * 2);
+          ctx.fillStyle = this.color.h;
+          ctx.fill();
+          continue;
+        }
+      }
+
+      // Full detail rendering for close segments
       const isStriped = (i % 4 === 0);
       const { sprite, spriteRadius } = getSegmentSprite(this.colorIdx, r, isStriped, stage);
       if (sprite) {

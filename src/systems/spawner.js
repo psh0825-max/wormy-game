@@ -81,9 +81,20 @@ export function respawnItems() {
 
 export function respawnAI() {
   const diff = getWaveDifficulty();
-  const { worms } = state;
+  const { worms, player } = state;
   const aliveAI = worms.filter(w => w.alive && !w.isPlayer && !w.isMinion && !w.isBoss).length;
-  if (aliveAI < diff.aiCount) {
+  
+  // Dynamic AI count adjustment based on player size for performance
+  let targetAICount = diff.aiCount;
+  if (player && player.alive) {
+    if (player.length > 150) {
+      targetAICount = Math.max(3, Math.floor(diff.aiCount * 0.7)); // Reduce AI when player is large
+    } else if (player.length > 100) {
+      targetAICount = Math.max(4, Math.floor(diff.aiCount * 0.85));
+    }
+  }
+  
+  if (aliveAI < targetAICount) {
     spawnAI();
   }
 

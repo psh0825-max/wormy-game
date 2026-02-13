@@ -107,6 +107,9 @@ export function gameOver() {
   playDeath();
   hideSkillUI();
   state.skillChoices = null;
+  
+  // Screen shake effect on death
+  state.screenShake = 1.0;
 
   // Final record check and save
   checkRecordBroken(state);
@@ -184,11 +187,16 @@ export function gameLoop(timestamp) {
       if (evo.evolved && w.isPlayer) {
         showNotification(`✨ ${evo.stage.icon} ${evo.stage.name}(으)로 진화!`, '#ffdd44', 'large');
         playEvolution();
-        // Particle burst
-        for (let j = 0; j < 30; j++) {
-          const colors = ['#ffdd44', '#ff8844', '#ffaa00', '#ffffff'];
+        // Enhanced particle burst for evolution
+        for (let j = 0; j < 50; j++) { // Increased from 30 to 50
+          const colors = ['#ffdd44', '#ff8844', '#ffaa00', '#ffffff', '#ff66ff', '#66ffff'];
           const c = colors[(Math.random() * colors.length) | 0];
-          const p = particlePool.acquire(w.head.x + (Math.random() - 0.5) * 20, w.head.y + (Math.random() - 0.5) * 20, c, 3 + Math.random() * 3);
+          const spread = 40 + j * 0.5; // Expanding spread
+          const angle = (Math.PI * 2 / 50) * j + Math.random() * 0.5;
+          const distance = Math.random() * spread;
+          const px = w.head.x + Math.cos(angle) * distance;
+          const py = w.head.y + Math.sin(angle) * distance;
+          const p = particlePool.acquire(px, py, c, 4 + Math.random() * 4);
           state.particles.push(p);
         }
         // Screen flash
@@ -206,7 +214,15 @@ export function gameLoop(timestamp) {
   state.segmentGrid.clear();
   for (const w of worms) {
     if (!w.alive) continue;
-    for (let i = 5; i < w.segments.length; i += 3) {
+    // Dynamic spacing based on worm size for better performance
+    let spacing = 3;
+    if (w.length > 100) {
+      spacing = Math.max(5, Math.floor(w.length / 30)); // Dynamic spacing for large worms
+    } else if (w.length > 50) {
+      spacing = 5;
+    }
+    
+    for (let i = 5; i < w.segments.length; i += spacing) {
       const seg = w.segments[i];
       state.segmentGrid.insert({ worm: w, segIndex: i, x: seg.x, y: seg.y }, seg.x, seg.y);
     }
@@ -281,20 +297,42 @@ export function gameLoop(timestamp) {
   }
 
   // ─── RENDER ──────────────────────────────────────
-  drawBackground();
+  // Apply screen shake to camera
+  const shakeCamera = {
+    x: camera.x + state.screenShakeX,
+    y: camera.y + state.screenShakeY
+  };
+
+  drawBackground(shakeCamera);
 
   // Foods
-  for (const f of state.foods) f.draw(ctx, camera);
+  for (const f of state.foods) f.draw(ctx, shakeCamera);
 
   // Items
-  for (const it of state.items) it.draw(ctx, camera);
+  for (const it of state.items) it.draw(ctx, shakeCamera);
 
   // Particles
-  for (const p of state.particles) p.draw(ctx, camera);
+  for (const p of state.particles) p.draw(ctx, shakeCamera);
 
   // Sort worms by length for proper layering
   const sortedWorms = [...state.worms].filter(w => w.alive).sort((a, b) => a.length - b.length);
-  for (const w of sortedWorms) w.draw(ctx, camera);
+  
+  // Dynamic AI management: Only draw worms visible on screen for better performance
+  const viewBounds = {
+    left: camera.x - W / 2 - 300,
+    right: camera.x + W / 2 + 300,
+    top: camera.y - H / 2 - 300,
+    bottom: camera.y + H / 2 + 300
+  };
+  
+  for (const w of sortedWorms) {
+    // Skip drawing if worm is completely off-screen (but still update AI)
+    if (!w.isPlayer && (w.head.x < viewBounds.left || w.head.x > viewBounds.right || 
+                         w.head.y < viewBounds.top || w.head.y > viewBounds.bottom)) {
+      continue; // Skip rendering for off-screen AI worms
+    }
+    w.draw(ctx, shakeCamera);
+  }
 
   // Evolution flash overlay
   if (state.evolutionFlash > 0) {
@@ -304,7 +342,7 @@ export function gameLoop(timestamp) {
     if (state.evolutionFlash < 0) state.evolutionFlash = 0;
   }
 
-  // HUD
-  if (state.frameCount % 6 === 0) updateHUD();
-  if (state.frameCount % 10 === 0) drawMinimap();
+  // HUD - Reduced update frequency for better performance
+  if (state.frameCount % 10 === 0) updateHUD(); // Changed from 6 to 10 frames
+  if (state.frameCount % 20 === 0) drawMinimap(); // Changed from 10 to 20 frames
 }

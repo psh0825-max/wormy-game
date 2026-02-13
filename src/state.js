@@ -31,6 +31,9 @@ export const state = {
   dangerZone: { active: false, radius: 0 },
   bossesAlive: 0,
   evolutionFlash: 0,           // screen flash alpha (fades from 1.0 to 0)
+  screenShake: 0,              // screen shake intensity (fades from 1.0 to 0)
+  screenShakeX: 0,             // current shake offset X
+  screenShakeY: 0,             // current shake offset Y
 
   // Spatial hash grids (set during init)
   foodGrid: null,

@@ -23,11 +23,21 @@ export class Item {
     const pulse = 1 + Math.sin(this.phase + frameCount * 0.05) * 0.1;
     const r = CFG.ITEM_RADIUS * pulse;
 
-    // Outer glow
+    // Enhanced item glow with pulsing
+    const glowIntensity = 0.15 + Math.sin(frameCount * 0.04 + this.phase) * 0.08;
+    
+    // Outer glow ring
     ctx.beginPath();
-    ctx.arc(sx, sy + bob, r + 10, 0, Math.PI * 2);
+    ctx.arc(sx, sy + bob, r + 12 * pulse, 0, Math.PI * 2);
     ctx.fillStyle = this.type.color;
-    ctx.globalAlpha = 0.12;
+    ctx.globalAlpha = glowIntensity * 0.6;
+    ctx.fill();
+    
+    // Middle glow
+    ctx.beginPath();
+    ctx.arc(sx, sy + bob, r + 6 * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = this.type.color;
+    ctx.globalAlpha = glowIntensity;
     ctx.fill();
     ctx.globalAlpha = 1;
 
