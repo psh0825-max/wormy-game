@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Wormy - 지렁이 게임</title>
+</head>
+<body>
+
+<!-- Menu -->
+<div id="menu-screen">
+  <div class="menu-title">Wormy</div>
+  <div class="menu-subtitle">지렁이 대전</div>
+  <div class="color-section-title">색상을 선택하세요</div>
+  <div class="color-grid" id="color-grid"></div>
+  <input type="text" class="nickname-input" id="nickname" placeholder="닉네임 입력" maxlength="12">
+  <button class="play-btn" id="play-btn">게임 시작</button>
+  <div class="menu-records" id="menu-records"></div>
+  <div class="menu-achievements" id="menu-achievements"></div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="score-panel">
+      <div class="score-label">점수</div>
+      <div class="score-value"><span class="evo-badge" id="evo-badge">🐛</span> <span id="score-value">0</span></div>
+      <div class="score-length" id="score-length">길이: 10</div>
+    </div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
+  <div class="wave-info" id="wave-info" style="display:none">
+    <span class="wave-label">🌊 0</span>
+    <div class="wave-bar"><div class="wave-bar-fill" id="wave-bar-fill"></div></div>
+  </div>
+</div>
+
+<div class="active-items" id="active-items"></div>
+
+<div class="minion-btn-wrap" id="minion-wrap" style="display:none">
+  <button class="minion-btn" id="minion-btn">
+    <span class="btn-icon">👥</span>
+    <span class="btn-text">부하</span>
+    <svg class="minion-cooldown" id="minion-cd" viewBox="0 0 78 78"><circle cx="39" cy="39" r="36" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-dasharray="226" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 39 39)"/></svg>
+  </button>
+</div>
+
+<div class="boost-btn-wrap" id="boost-wrap" style="display:none">
+  <button class="boost-btn" id="boost-btn">⚡</button>
+</div>
+
+<button class="mute-btn" id="mute-btn" style="display:none">🔊</button>
+
+<div class="minimap" id="minimap-container" style="display:none">
+  <canvas id="minimap" width="140" height="140"></canvas>
+</div>
+
+<!-- Game Over -->
+<div id="game-over">
+  <div class="go-evo-icon" id="go-evo-icon">🐛</div>
+  <div class="go-title">게임 오버</div>
+  <div class="go-wave" id="go-wave"></div>
+  <div class="go-score" id="go-score">점수: 0</div>
+  <div class="go-detail" id="go-detail">길이: 10 | 킬: 0</div>
+  <div class="go-records" id="go-records"></div>
+  <button class="go-btn" id="retry-btn">다시하기</button>
+</div>
+
+<canvas id="game"></canvas>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
