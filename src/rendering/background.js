@@ -30,10 +30,13 @@ for (let i = 0; i < DUST_COUNT; i++) {
 }
 
 // ── Terrain decorations (pre-generated) ──
-const TERRAIN_COUNT = state.isMobile ? 40 : 80;
+// Note: isMobile is set later in setupInput(), so we generate all 80 and
+// skip rendering based on isMobile at draw time.  A pre-render cache is
+// built on first drawBackground call to avoid per-frame cost.
+const TERRAIN_MAX = 80;
 const terrainDecos = [];
 const terrainTypes = ['grass', 'stone', 'flower', 'moss', 'pebble'];
-for (let i = 0; i < 80; i++) {
+for (let i = 0; i < TERRAIN_MAX; i++) {
   const type = terrainTypes[Math.floor(Math.random() * terrainTypes.length)];
   terrainDecos.push({
     x: Math.random() * CFG.WORLD_W,
@@ -199,9 +202,10 @@ export function drawBackground(cam = null) {
   }
   ctx.stroke();
 
-  // ── Terrain decorations ──
-  for (const deco of terrainDecos) {
-    drawTerrainDeco(ctx, deco, offX, offY, W, H);
+  // ── Terrain decorations (skip half on mobile for perf) ──
+  const terrainLimit = state.isMobile ? Math.floor(TERRAIN_MAX / 2) : TERRAIN_MAX;
+  for (let i = 0; i < terrainLimit; i++) {
+    drawTerrainDeco(ctx, terrainDecos[i], offX, offY, W, H);
   }
 
   // ── Floating dust particles ──

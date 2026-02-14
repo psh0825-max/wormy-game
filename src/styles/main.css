@@ -177,6 +177,7 @@ canvas { display: block; }
   border-radius: 25px;
   border: 2px solid rgba(100, 100, 200, 0.3);
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   color: #fff;
   font-size: clamp(14px, 4vw, 18px);
@@ -245,6 +246,7 @@ canvas { display: block; }
   grid-template-columns: 1fr 1fr;
   gap: 4px 8px;
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border-radius: 12px;
   padding: clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 16px);
@@ -381,6 +383,7 @@ canvas { display: block; }
 }
 .active-item {
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-radius: 10px;
   padding: clamp(5px, 1.5vw, 8px) clamp(8px, 2vw, 14px);
@@ -511,6 +514,7 @@ canvas { display: block; }
   top: 50%;
   opacity: 0.4;
   transition: opacity 0.2s;
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 .joystick-knob {
@@ -606,6 +610,7 @@ canvas { display: block; }
 }
 .go-stat {
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: clamp(10px, 2.5vw, 14px);
@@ -695,6 +700,7 @@ canvas { display: block; }
   border-radius: 12px;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 10;
   pointer-events: none;
@@ -711,6 +717,7 @@ canvas { display: block; }
   transform: translateX(-50%);
   z-index: 20;
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
@@ -740,6 +747,7 @@ canvas { display: block; }
   grid-template-columns: 1fr 1fr;
   gap: 4px 12px;
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border-radius: 12px;
   padding: clamp(8px, 2vw, 14px) clamp(12px, 3vw, 20px);
@@ -776,6 +784,7 @@ canvas { display: block; }
   flex-direction: column;
   align-items: center;
   background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   border-radius: 8px;
   padding: clamp(6px, 1.5vw, 10px) 4px;
@@ -822,6 +831,7 @@ canvas { display: block; }
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   background: rgba(5, 5, 20, 0.85);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 60;
   opacity: 0;
@@ -872,6 +882,7 @@ canvas { display: block; }
   overflow: hidden;
   opacity: 0;
   animation: skillCardIn 0.4s ease-out forwards;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 .skill-card:nth-child(1) { animation-delay: 0s; }
