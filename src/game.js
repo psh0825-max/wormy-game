@@ -12,7 +12,7 @@ import { updateCamera } from './systems/camera.js';
 import { spawnAI, respawnFood, respawnItems, respawnAI } from './systems/spawner.js';
 import { drawBackground } from './rendering/background.js';
 import { drawMinimap } from './rendering/minimap.js';
-import { updateHUD, showNotification } from './rendering/hud.js';
+import { updateHUD, showNotification, updateAndDrawFloatTexts, updateAndDrawFoodAbsorbs, drawSpeedLines } from './rendering/hud.js';
 import { initAudio, startBGM, stopBGM, playDeath, playAchievement, playEvolution } from './audio/SoundManager.js';
 import { loadRecords, saveRecords, checkRecordBroken, incrementGameCount, getRecords, getNewRecords, clearNewRecords, formatTime } from './systems/records.js';
 import { loadAchievements, checkAchievements, getPendingNotifications } from './systems/achievements.js';
@@ -26,7 +26,7 @@ import { updatePortals, updateDangerZone, checkObstacleCollisions, checkPortalTe
 state.foodGrid = new SpatialHash(100);
 state.segmentGrid = new SpatialHash(100);
 
-// Register gameOver callback to avoid circular dependency with collision.js
+// Register gameOver callback
 state.onGameOver = () => gameOver();
 
 export function startGame() {
@@ -37,11 +37,20 @@ export function startGame() {
   document.getElementById('boost-wrap').style.display = 'block';
   document.getElementById('minimap-container').style.display = 'block';
 
+  // Show joystick on mobile
+  if (state.isMobile) {
+    const joystickArea = document.getElementById('joystick-area');
+    if (joystickArea) joystickArea.style.display = 'block';
+  }
+
   state.killCount = 0;
   state.minionCooldown = 0;
   state.activeItemEffects = [];
   state.notifications = [];
   state.survivalTime = 0;
+  state.damageVignette = 0;
+  state.floatTexts = [];
+  state.foodAbsorbs = [];
 
   // Phase 2 resets
   state.wave = 0;
@@ -107,7 +116,7 @@ export function gameOver() {
   playDeath();
   hideSkillUI();
   state.skillChoices = null;
-  
+
   // Screen shake effect on death
   state.screenShake = 1.0;
 
@@ -120,6 +129,10 @@ export function gameOver() {
 
   document.getElementById('mute-btn').style.display = 'none';
 
+  // Hide joystick
+  const joystickArea = document.getElementById('joystick-area');
+  if (joystickArea) joystickArea.style.display = 'none';
+
   // Evolution icon + wave on game over
   const evoStage = EVOLUTION_STAGES[player.evolutionStage] || EVOLUTION_STAGES[0];
   document.getElementById('go-evo-icon').textContent = evoStage.icon;
@@ -128,10 +141,17 @@ export function gameOver() {
     goWaveEl.textContent = state.wave > 0 ? `🌊 웨이브 ${state.wave} 도달` : '';
   }
 
-  document.getElementById('go-score').textContent = `점수: ${Math.floor(player.score)}`;
-  document.getElementById('go-detail').textContent = `길이: ${Math.floor(player.length)} | 킬: ${killCount} | 생존: ${formatTime(state.survivalTime)}`;
+  // Stats card
+  const scoreVal = document.getElementById('go-score-val');
+  const lengthVal = document.getElementById('go-length-val');
+  const killsVal = document.getElementById('go-kills-val');
+  const timeVal = document.getElementById('go-time-val');
+  if (scoreVal) scoreVal.textContent = Math.floor(player.score);
+  if (lengthVal) lengthVal.textContent = Math.floor(player.length);
+  if (killsVal) killsVal.textContent = killCount;
+  if (timeVal) timeVal.textContent = formatTime(state.survivalTime);
 
-  // Show record info on game over
+  // Show record info
   const recordEl = document.getElementById('go-records');
   if (recordEl) {
     let html = '';
@@ -181,17 +201,16 @@ export function gameLoop(timestamp) {
     if (!w.isPlayer) updateAI(w, dt);
     w.update(dt);
 
-    // Evolution check (all non-minion worms)
+    // Evolution check
     if (!w.isMinion) {
       const evo = checkEvolution(w);
       if (evo.evolved && w.isPlayer) {
         showNotification(`✨ ${evo.stage.icon} ${evo.stage.name}(으)로 진화!`, '#ffdd44', 'large');
         playEvolution();
-        // Enhanced particle burst for evolution
-        for (let j = 0; j < 50; j++) { // Increased from 30 to 50
+        for (let j = 0; j < 50; j++) {
           const colors = ['#ffdd44', '#ff8844', '#ffaa00', '#ffffff', '#ff66ff', '#66ffff'];
           const c = colors[(Math.random() * colors.length) | 0];
-          const spread = 40 + j * 0.5; // Expanding spread
+          const spread = 40 + j * 0.5;
           const angle = (Math.PI * 2 / 50) * j + Math.random() * 0.5;
           const distance = Math.random() * spread;
           const px = w.head.x + Math.cos(angle) * distance;
@@ -199,7 +218,6 @@ export function gameLoop(timestamp) {
           const p = particlePool.acquire(px, py, c, 4 + Math.random() * 4);
           state.particles.push(p);
         }
-        // Screen flash
         state.evolutionFlash = 1.0;
       }
     }
@@ -214,14 +232,13 @@ export function gameLoop(timestamp) {
   state.segmentGrid.clear();
   for (const w of worms) {
     if (!w.alive) continue;
-    // Dynamic spacing based on worm size for better performance
     let spacing = 3;
     if (w.length > 100) {
-      spacing = Math.max(5, Math.floor(w.length / 30)); // Dynamic spacing for large worms
+      spacing = Math.max(5, Math.floor(w.length / 30));
     } else if (w.length > 50) {
       spacing = 5;
     }
-    
+
     for (let i = 5; i < w.segments.length; i += spacing) {
       const seg = w.segments[i];
       state.segmentGrid.insert({ worm: w, segIndex: i, x: seg.x, y: seg.y }, seg.x, seg.y);
@@ -242,7 +259,7 @@ export function gameLoop(timestamp) {
   respawnItems();
   respawnAI();
 
-  // Clean dead - release back to pools
+  // Clean dead
   const aliveFoods = [];
   for (const f of foods) {
     if (f.alive) aliveFoods.push(f);
@@ -253,7 +270,6 @@ export function gameLoop(timestamp) {
   state.items = items.filter(it => it.alive);
   state.worms = worms.filter(w => w.alive || w.isPlayer);
 
-  // Update particles - release dead back to pool
   const aliveParticles = [];
   for (const p of particles) {
     if (p.update(dt)) aliveParticles.push(p);
@@ -273,14 +289,14 @@ export function gameLoop(timestamp) {
   // Wave system
   updateWave(dt);
 
-  // Record check (every 60 frames)
+  // Record check
   if (state.frameCount % 60 === 0) {
     if (checkRecordBroken(state)) {
       showNotification('🏆 새 기록!', '#ffdd44');
     }
   }
 
-  // Achievement check (every 30 frames)
+  // Achievement check
   if (state.frameCount % 30 === 0) {
     checkAchievements(state);
     const achieved = getPendingNotifications();
@@ -293,11 +309,16 @@ export function gameLoop(timestamp) {
   // Skill selection trigger
   if (checkSkillTrigger()) {
     showSkillUI(state.skillChoices);
-    return; // pause game while selecting
+    return;
+  }
+
+  // ── Fade effects ──
+  if (state.damageVignette > 0) {
+    state.damageVignette -= dt * 2;
+    if (state.damageVignette < 0) state.damageVignette = 0;
   }
 
   // ─── RENDER ──────────────────────────────────────
-  // Apply screen shake to camera
   const shakeCamera = {
     x: camera.x + state.screenShakeX,
     y: camera.y + state.screenShakeY
@@ -314,35 +335,44 @@ export function gameLoop(timestamp) {
   // Particles
   for (const p of state.particles) p.draw(ctx, shakeCamera);
 
+  // Food absorption animations
+  updateAndDrawFoodAbsorbs(ctx, shakeCamera, dt);
+
   // Sort worms by length for proper layering
   const sortedWorms = [...state.worms].filter(w => w.alive).sort((a, b) => a.length - b.length);
-  
-  // Dynamic AI management: Only draw worms visible on screen for better performance
+
   const viewBounds = {
     left: camera.x - W / 2 - 300,
     right: camera.x + W / 2 + 300,
     top: camera.y - H / 2 - 300,
     bottom: camera.y + H / 2 + 300
   };
-  
+
   for (const w of sortedWorms) {
-    // Skip drawing if worm is completely off-screen (but still update AI)
-    if (!w.isPlayer && (w.head.x < viewBounds.left || w.head.x > viewBounds.right || 
+    if (!w.isPlayer && (w.head.x < viewBounds.left || w.head.x > viewBounds.right ||
                          w.head.y < viewBounds.top || w.head.y > viewBounds.bottom)) {
-      continue; // Skip rendering for off-screen AI worms
+      continue;
     }
     w.draw(ctx, shakeCamera);
+  }
+
+  // Float texts (score popups, etc.)
+  updateAndDrawFloatTexts(ctx, shakeCamera, dt);
+
+  // Speed lines during boost
+  if (player && player.alive && player.boosting) {
+    drawSpeedLines(ctx, W, H, true);
   }
 
   // Evolution flash overlay
   if (state.evolutionFlash > 0) {
     ctx.fillStyle = `rgba(255,240,180,${state.evolutionFlash * 0.35})`;
     ctx.fillRect(0, 0, W, H);
-    state.evolutionFlash -= dt * 3; // fade over ~0.33s
+    state.evolutionFlash -= dt * 3;
     if (state.evolutionFlash < 0) state.evolutionFlash = 0;
   }
 
-  // HUD - Reduced update frequency for better performance
-  if (state.frameCount % 10 === 0) updateHUD(); // Changed from 6 to 10 frames
-  if (state.frameCount % 20 === 0) drawMinimap(); // Changed from 10 to 20 frames
+  // HUD
+  if (state.frameCount % 10 === 0) updateHUD();
+  if (state.frameCount % 20 === 0) drawMinimap();
 }

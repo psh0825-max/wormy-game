@@ -21,25 +21,25 @@ export const state = {
   // Phase 2 systems
   wave: 0,
   waveTimer: 0,
-  skillChoices: null,      // null = no selection pending, array = show UI
-  selectedSkills: [],      // { id, level }
-  skillModifiers: {},      // computed modifiers from skills
-  nextSkillScore: 500,     // next score threshold for skill selection
-  achievements: {},        // loaded from localStorage
+  skillChoices: null,
+  selectedSkills: [],
+  skillModifiers: {},
+  nextSkillScore: 500,
+  achievements: {},
   obstacles: [],
-  portals: [],             // pairs: [{a, b}, ...]
+  portals: [],
   dangerZone: { active: false, radius: 0 },
   bossesAlive: 0,
-  evolutionFlash: 0,           // screen flash alpha (fades from 1.0 to 0)
-  screenShake: 0,              // screen shake intensity (fades from 1.0 to 0)
-  screenShakeX: 0,             // current shake offset X
-  screenShakeY: 0,             // current shake offset Y
+  evolutionFlash: 0,
+  screenShake: 0,
+  screenShakeX: 0,
+  screenShakeY: 0,
 
-  // Spatial hash grids (set during init)
+  // Spatial hash grids
   foodGrid: null,
   segmentGrid: null,
 
-  // DOM references (set during init)
+  // DOM references
   canvas: null,
   ctx: null,
   mmCanvas: null,
@@ -47,4 +47,12 @@ export const state = {
   W: 0,
   H: 0,
   dpr: 1,
+
+  // ── New visual effects state ──
+  damageVignette: 0,        // red vignette alpha (fades from 1 to 0)
+  speedLines: false,         // show speed lines during boost
+  floatTexts: [],            // floating score texts [{x, y, text, color, life, vy}]
+  foodAbsorbs: [],           // food absorption animations [{fx, fy, tx, ty, color, t, radius}]
+  isMobile: false,           // detected mobile device
+  joystick: { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0, id: null },
 };

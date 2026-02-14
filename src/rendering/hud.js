@@ -8,7 +8,6 @@ export function updateHUD() {
   const evoStage = EVOLUTION_STAGES[player.evolutionStage] || EVOLUTION_STAGES[0];
   document.getElementById('score-value').textContent = Math.floor(player.score);
 
-  // Evolution badge with icon
   const evoBadge = document.getElementById('evo-badge');
   if (evoBadge) {
     evoBadge.textContent = evoStage.icon;
@@ -18,7 +17,6 @@ export function updateHUD() {
 
   // Wave progress bar
   const waveEl = document.getElementById('wave-info');
-  const waveBar = document.getElementById('wave-bar-fill');
   if (waveEl) {
     const elapsed = Math.min(waveTimer, WAVE_CFG.DURATION);
     const pct = (elapsed / WAVE_CFG.DURATION) * 100;
@@ -68,6 +66,12 @@ export function updateHUD() {
       <div class="item-bar"><div class="item-bar-fill" style="width:${remaining * 100}%;background:${e.type.color}"></div></div>
     </div>`;
   }).join('');
+
+  // Damage vignette
+  const vignetteEl = document.getElementById('damage-vignette');
+  if (vignetteEl) {
+    vignetteEl.style.opacity = state.damageVignette;
+  }
 }
 
 export function showNotification(text, color, size = 'normal') {
@@ -81,4 +85,105 @@ export function showNotification(text, color, size = 'normal') {
   document.body.appendChild(div);
   const duration = size === 'large' ? 2200 : 1600;
   setTimeout(() => div.remove(), duration);
+}
+
+// ── Float text system (rendered on canvas) ──
+export function addFloatText(worldX, worldY, text, color = '#fff', size = 18) {
+  state.floatTexts.push({
+    x: worldX,
+    y: worldY,
+    text,
+    color,
+    size,
+    life: 1.0,
+    vy: -1.5,
+  });
+}
+
+export function updateAndDrawFloatTexts(ctx, cam, dt) {
+  const { W, H } = state;
+  const alive = [];
+
+  for (const ft of state.floatTexts) {
+    ft.y += ft.vy * dt * 60;
+    ft.vy *= 0.98;
+    ft.life -= dt * 0.8;
+    if (ft.life <= 0) continue;
+
+    const sx = ft.x - cam.x + W / 2;
+    const sy = ft.y - cam.y + H / 2;
+    if (sx < -100 || sx > W + 100 || sy < -100 || sy > H + 100) { alive.push(ft); continue; }
+
+    ctx.save();
+    ctx.globalAlpha = ft.life;
+    ctx.font = `bold ${ft.size}px "Segoe UI", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillText(ft.text, sx, sy + 2);
+    ctx.fillStyle = ft.color;
+    ctx.fillText(ft.text, sx, sy);
+    ctx.restore();
+
+    alive.push(ft);
+  }
+  state.floatTexts = alive;
+}
+
+// ── Food absorption animations ──
+export function addFoodAbsorb(fx, fy, tx, ty, color, radius) {
+  state.foodAbsorbs.push({ fx, fy, tx, ty, color, radius, t: 0 });
+}
+
+export function updateAndDrawFoodAbsorbs(ctx, cam, dt) {
+  const { W, H } = state;
+  const alive = [];
+
+  for (const fa of state.foodAbsorbs) {
+    fa.t += dt * 5; // complete in ~0.2s
+    if (fa.t >= 1) continue;
+
+    // Ease-in curve for suction effect
+    const t = fa.t * fa.t;
+    const x = fa.fx + (fa.tx - fa.fx) * t;
+    const y = fa.fy + (fa.ty - fa.fy) * t;
+    const r = fa.radius * (1 - t);
+
+    const sx = x - cam.x + W / 2;
+    const sy = y - cam.y + H / 2;
+    if (sx < -20 || sx > W + 20 || sy < -20 || sy > H + 20) { alive.push(fa); continue; }
+
+    ctx.globalAlpha = 1 - t;
+    ctx.beginPath();
+    ctx.arc(sx, sy, Math.max(1, r), 0, Math.PI * 2);
+    ctx.fillStyle = fa.color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    alive.push(fa);
+  }
+  state.foodAbsorbs = alive;
+}
+
+// ── Speed lines effect ──
+export function drawSpeedLines(ctx, W, H, boosting) {
+  if (!boosting) return;
+
+  const count = state.isMobile ? 8 : 15;
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.strokeStyle = 'rgba(200, 220, 255, 0.8)';
+  ctx.lineWidth = 1.5;
+
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const len = 30 + Math.random() * 60;
+    const angle = Math.atan2(y - H / 2, x - W / 2);
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
