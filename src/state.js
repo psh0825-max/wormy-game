@@ -7,7 +7,7 @@ export const state = {
   foods: [],
   items: [],
   particles: [],
-  camera: { x: 0, y: 0, targetX: 0, targetY: 0 },
+  camera: { x: 0, y: 0, targetX: 0, targetY: 0, zoom: 1, targetZoom: 1 },
   mouse: { x: 0, y: 0 },
   boosting: false,
   killCount: 0,

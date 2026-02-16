@@ -121,21 +121,28 @@ export function drawBackground(cam = null) {
   const { ctx, camera, W, H, frameCount } = state;
   const actualCamera = cam || camera;
 
+  const zoom = actualCamera.zoom || 1;
   const offX = -actualCamera.x + W / 2;
   const offY = -actualCamera.y + H / 2;
+
+  // 줌 보정된 화면 크기 (줌 트랜스폼 내에서 전체 화면 채우기)
+  const zW = W / zoom + 200;
+  const zH = H / zoom + 200;
+  const zOffX = (W - zW) / 2;
+  const zOffY = (H - zH) / 2;
 
   // ── Radial gradient background with subtle animation ──
   const time = frameCount * 0.001;
   const pulseIntensity = Math.sin(time) * 0.02 + 0.98;
   const grad = ctx.createRadialGradient(
     W / 2, H / 2, 0,
-    W / 2, H / 2, Math.max(W, H) * 0.7 * pulseIntensity
+    W / 2, H / 2, Math.max(zW, zH) * 0.7 * pulseIntensity
   );
   grad.addColorStop(0, `hsl(240, 60%, ${8 + Math.sin(time * 0.5) * 2}%)`);
   grad.addColorStop(0.6, '#0c0c2d');
   grad.addColorStop(1, '#040412');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(zOffX, zOffY, zW, zH);
 
   // ── Wave color shift overlay ──
   const wave = state.wave || 0;
@@ -144,7 +151,7 @@ export function drawBackground(cam = null) {
     const waveAlpha = (0.03 + Math.min(wave * 0.005, 0.05)) * (1 + Math.sin(frameCount * 0.02) * 0.3);
     const pulsingHue = hue + Math.sin(frameCount * 0.01) * 10;
     ctx.fillStyle = `hsla(${pulsingHue}, 70%, 45%, ${waveAlpha})`;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(zOffX, zOffY, zW, zH);
   }
 
   // ── Star field with parallax + twinkle ──
@@ -165,40 +172,42 @@ export function drawBackground(cam = null) {
   // ── Grid (minor + major) ──
   const gridSize = 60;
   const majorGridSize = 300;
-  const startX = Math.floor((actualCamera.x - W / 2) / gridSize) * gridSize;
-  const startY = Math.floor((actualCamera.y - H / 2) / gridSize) * gridSize;
+  const viewHalfW = W / 2 / zoom;
+  const viewHalfH = H / 2 / zoom;
+  const startX = Math.floor((actualCamera.x - viewHalfW) / gridSize) * gridSize;
+  const startY = Math.floor((actualCamera.y - viewHalfH) / gridSize) * gridSize;
 
   ctx.strokeStyle = 'rgba(40, 40, 100, 0.12)';
   ctx.lineWidth = 0.5;
   ctx.beginPath();
-  for (let x = startX; x < actualCamera.x + W / 2 + gridSize; x += gridSize) {
+  for (let x = startX; x < actualCamera.x + viewHalfW + gridSize; x += gridSize) {
     if (x % majorGridSize === 0) continue;
     const sx = x + offX;
-    ctx.moveTo(sx, 0);
-    ctx.lineTo(sx, H);
+    ctx.moveTo(sx, zOffY);
+    ctx.lineTo(sx, zOffY + zH);
   }
-  for (let y = startY; y < actualCamera.y + H / 2 + gridSize; y += gridSize) {
+  for (let y = startY; y < actualCamera.y + viewHalfH + gridSize; y += gridSize) {
     if (y % majorGridSize === 0) continue;
     const sy = y + offY;
-    ctx.moveTo(0, sy);
-    ctx.lineTo(W, sy);
+    ctx.moveTo(zOffX, sy);
+    ctx.lineTo(zOffX + zW, sy);
   }
   ctx.stroke();
 
-  const majorStartX = Math.floor((actualCamera.x - W / 2) / majorGridSize) * majorGridSize;
-  const majorStartY = Math.floor((actualCamera.y - H / 2) / majorGridSize) * majorGridSize;
+  const majorStartX = Math.floor((actualCamera.x - viewHalfW) / majorGridSize) * majorGridSize;
+  const majorStartY = Math.floor((actualCamera.y - viewHalfH) / majorGridSize) * majorGridSize;
   ctx.strokeStyle = 'rgba(50, 50, 120, 0.2)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let x = majorStartX; x < actualCamera.x + W / 2 + majorGridSize; x += majorGridSize) {
+  for (let x = majorStartX; x < actualCamera.x + viewHalfW + majorGridSize; x += majorGridSize) {
     const sx = x + offX;
-    ctx.moveTo(sx, 0);
-    ctx.lineTo(sx, H);
+    ctx.moveTo(sx, zOffY);
+    ctx.lineTo(sx, zOffY + zH);
   }
-  for (let y = majorStartY; y < actualCamera.y + H / 2 + majorGridSize; y += majorGridSize) {
+  for (let y = majorStartY; y < actualCamera.y + viewHalfH + majorGridSize; y += majorGridSize) {
     const sy = y + offY;
-    ctx.moveTo(0, sy);
-    ctx.lineTo(W, sy);
+    ctx.moveTo(zOffX, sy);
+    ctx.lineTo(zOffX + zW, sy);
   }
   ctx.stroke();
 

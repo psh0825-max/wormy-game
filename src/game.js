@@ -321,8 +321,19 @@ export function gameLoop(timestamp) {
   // ─── RENDER ──────────────────────────────────────
   const shakeCamera = {
     x: camera.x + state.screenShakeX,
-    y: camera.y + state.screenShakeY
+    y: camera.y + state.screenShakeY,
+    zoom: camera.zoom
   };
+
+  const zoom = camera.zoom;
+  const viewW = W / zoom;
+  const viewH = H / zoom;
+
+  // 줌 트랜스폼 적용 — 배경 포함 모든 월드 요소에 적용
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-W / 2, -H / 2);
 
   drawBackground(shakeCamera);
 
@@ -342,10 +353,10 @@ export function gameLoop(timestamp) {
   const sortedWorms = [...state.worms].filter(w => w.alive).sort((a, b) => a.length - b.length);
 
   const viewBounds = {
-    left: camera.x - W / 2 - 300,
-    right: camera.x + W / 2 + 300,
-    top: camera.y - H / 2 - 300,
-    bottom: camera.y + H / 2 + 300
+    left: camera.x - viewW / 2 - 300,
+    right: camera.x + viewW / 2 + 300,
+    top: camera.y - viewH / 2 - 300,
+    bottom: camera.y + viewH / 2 + 300
   };
 
   for (const w of sortedWorms) {
@@ -359,12 +370,14 @@ export function gameLoop(timestamp) {
   // Float texts (score popups, etc.)
   updateAndDrawFloatTexts(ctx, shakeCamera, dt);
 
-  // Speed lines during boost
+  ctx.restore(); // 줌 트랜스폼 복원
+
+  // Speed lines during boost (줌 영향 안 받음)
   if (player && player.alive && player.boosting) {
     drawSpeedLines(ctx, W, H, true);
   }
 
-  // Evolution flash overlay
+  // Evolution flash overlay (줌 영향 안 받음)
   if (state.evolutionFlash > 0) {
     ctx.fillStyle = `rgba(255,240,180,${state.evolutionFlash * 0.35})`;
     ctx.fillRect(0, 0, W, H);
