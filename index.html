@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Wormy - 지렁이 게임</title>
+  <script type="module" crossorigin src="/wormy-game/assets/index-mE9yCu5J.js"></script>
+  <link rel="stylesheet" crossorigin href="/wormy-game/assets/index-DZQjtPMT.css">
+</head>
+<body>
+
+<!-- Menu -->
+<div id="menu-screen">
+  <div class="menu-bg-particles" id="menu-particles"></div>
+  <div class="menu-title">Wormy</div>
+  <div class="menu-subtitle">지렁이 대전</div>
+  <div class="menu-preview" id="menu-preview"><canvas id="preview-canvas" width="120" height="80"></canvas></div>
+  <div class="color-section-title">색상을 선택하세요</div>
+  <div class="color-grid" id="color-grid"></div>
+  <input type="text" class="nickname-input" id="nickname" placeholder="닉네임 입력" maxlength="12">
+  <button class="play-btn" id="play-btn">게임 시작</button>
+  <div class="controls-guide">
+    <div class="controls-title">🎮 조작법</div>
+    <div class="controls-grid">
+      <div class="control-item">🖱️ 마우스 이동</div>
+      <div class="control-item">⚡ 부스트 버튼 클릭</div>
+      <div class="control-item">👥 부하 소환 버튼</div>
+      <div class="control-item">📱 터치/조이스틱</div>
+    </div>
+  </div>
+  <div class="menu-records" id="menu-records"></div>
+  <div class="menu-achievements" id="menu-achievements"></div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="score-panel">
+      <div class="score-label">점수</div>
+      <div class="score-value"><span class="evo-badge" id="evo-badge">🐛</span> <span id="score-value">0</span></div>
+      <div class="score-length" id="score-length">길이: 10</div>
+    </div>
+    <div class="leaderboard" id="leaderboard"></div>
+  </div>
+  <div class="wave-info" id="wave-info" style="display:none">
+    <span class="wave-label">🌊 0</span>
+    <div class="wave-bar"><div class="wave-bar-fill" id="wave-bar-fill"></div></div>
+  </div>
+</div>
+
+<div class="active-items" id="active-items"></div>
+
+<div class="minion-btn-wrap" id="minion-wrap" style="display:none">
+  <button class="minion-btn" id="minion-btn">
+    <span class="btn-icon">👥</span>
+    <span class="btn-text">부하</span>
+    <svg class="minion-cooldown" id="minion-cd" viewBox="0 0 78 78"><circle cx="39" cy="39" r="36" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3" stroke-dasharray="226" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 39 39)"/></svg>
+  </button>
+</div>
+
+<div class="boost-btn-wrap" id="boost-wrap" style="display:none">
+  <button class="boost-btn" id="boost-btn">⚡</button>
+</div>
+
+<button class="mute-btn" id="mute-btn" style="display:none">🔊</button>
+
+<div class="minimap" id="minimap-container" style="display:none">
+  <canvas id="minimap" width="140" height="140"></canvas>
+</div>
+
+<!-- Virtual Joystick (mobile only) -->
+<div class="joystick-area" id="joystick-area" style="display:none">
+  <div class="joystick-base" id="joystick-base">
+    <div class="joystick-knob" id="joystick-knob"></div>
+  </div>
+</div>
+
+<!-- Damage vignette overlay -->
+<div class="damage-vignette" id="damage-vignette"></div>
+
+<!-- Speed lines overlay -->
+<canvas class="speed-lines-canvas" id="speed-lines"></canvas>
+
+<!-- Game Over -->
+<div id="game-over">
+  <div class="go-evo-icon" id="go-evo-icon">🐛</div>
+  <div class="go-title">게임 오버</div>
+  <div class="go-wave" id="go-wave"></div>
+  <div class="go-stats-card" id="go-stats-card">
+    <div class="go-stat"><span class="go-stat-icon">🏆</span><span class="go-stat-label">점수</span><span class="go-stat-value" id="go-score-val">0</span></div>
+    <div class="go-stat"><span class="go-stat-icon">📏</span><span class="go-stat-label">길이</span><span class="go-stat-value" id="go-length-val">0</span></div>
+    <div class="go-stat"><span class="go-stat-icon">⚔️</span><span class="go-stat-label">킬</span><span class="go-stat-value" id="go-kills-val">0</span></div>
+    <div class="go-stat"><span class="go-stat-icon">⏱️</span><span class="go-stat-label">생존</span><span class="go-stat-value" id="go-time-val">0s</span></div>
+  </div>
+  <div class="go-records" id="go-records"></div>
+  <button class="go-btn" id="retry-btn">다시하기</button>
+</div>
+
+<canvas id="game"></canvas>
+
+</body>
+</html>
